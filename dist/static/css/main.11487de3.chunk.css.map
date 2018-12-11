@@ -1,0 +1,1 @@
+{"version":3,"sources":["C:/xampp/htdocs/xampp/app/webmanager/src/C:/xampp/htdocs/xampp/app/webmanager/src/index.css"],"names":[],"mappings":"AAAA,KACE,eAAiB,CAClB,AACD,KACE,SAAU,AACV,SAAW,CACZ,AACD,EACE,oBAAsB,CACvB","file":"main.11487de3.chunk.css","sourcesContent":["html {\n  min-height: 100%;\n}\nbody {\n  margin: 0;\n  padding: 0;\n}\na {\n  text-decoration: none;\n}\n"]}
