@@ -145,12 +145,22 @@ const theme = createMuiTheme({
       root: {
         background: "transparent",
         "&$selected": {
+          color: "#fff",
           backgroundColor: "#a73591",
           "&:hover": {
             backgroundColor: "#a73591"
           },
           "& > div, & > div span": {
             color: "#fff"
+          }
+        }
+      }
+    },
+    MuiList: {
+      root: {
+        MuiListItem: {
+          "&$selected": {
+            backgroundColor: "#000"
           }
         }
       }
