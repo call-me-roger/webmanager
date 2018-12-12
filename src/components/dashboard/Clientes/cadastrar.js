@@ -12,11 +12,13 @@ import {
   Paper,
   Slide,
   Zoom,
-  Fab
+  Fab,
+  Tooltip,
+  LinearProgress
 } from "@material-ui/core";
-import AppBar from "@material-ui/core/AppBar";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
+import MaskedInput from "react-text-mask";
+// Tabs import
+import { AppBar, Tabs, Tab } from "@material-ui/core";
 import PhoneIcon from "@material-ui/icons/Phone";
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import PersonPinIcon from "@material-ui/icons/PersonPin";
@@ -26,7 +28,13 @@ import CheckIcon from "@material-ui/icons/Check";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import * as themes from "../@includes/themes";
 // Includes
-import isEmail from "../@functions/validator";
+import * as validator from "../@functions/validator";
+import * as validaDados from "./validaDados";
+// Database
+import { connect } from "react-redux";
+import { createClient } from "../../../store/actions/clientActions";
+
+let sendingData = false;
 
 function TabContainer(props) {
   return (
@@ -35,6 +43,74 @@ function TabContainer(props) {
         {props.children}
       </Grid>
     </Paper>
+  );
+}
+
+function PhoneMask(props) {
+  const { inputRef, ...other } = props;
+
+  return (
+    <MaskedInput
+      {...other}
+      ref={inputRef}
+      mask={[
+        "(",
+        /[1-9]/,
+        /\d/,
+        ")",
+        " ",
+        /\d/,
+        " ",
+        /\d/,
+        /\d/,
+        /\d/,
+        /\d/,
+        "-",
+        /\d/,
+        /\d/,
+        /\d/,
+        /\d/
+      ]}
+    />
+  );
+}
+
+function CPFMask(props) {
+  const { inputRef, ...other } = props;
+
+  return (
+    <MaskedInput
+      {...other}
+      ref={inputRef}
+      mask={[
+        /[0-9]/,
+        /\d/,
+        /\d/,
+        ".",
+        /\d/,
+        /\d/,
+        /\d/,
+        ".",
+        /\d/,
+        /\d/,
+        /\d/,
+        "-",
+        /\d/,
+        /\d/
+      ]}
+    />
+  );
+}
+
+function CEPMask(props) {
+  const { inputRef, ...other } = props;
+
+  return (
+    <MaskedInput
+      {...other}
+      ref={inputRef}
+      mask={[/\d/, /\d/, /\d/, /\d/, /\d/, "-", /\d/, /\d/, /\d/]}
+    />
   );
 }
 
@@ -52,18 +128,24 @@ class CadastrarCliente extends Component {
       complemento: ""
     },
     cep: "",
-    value: 0
+    estado: "",
+    cidade: "",
+    bairro: "",
+    rua: "",
+    numero: "",
+    complemento: "",
+    cepError: false,
+    sendingData: false,
+    value: 0 // Tabs
   };
 
   handleChange = e => {
     this.setState({
       [e.target.id]: e.target.value
     });
-    console.log(this.state);
   };
 
   handleSelect = e => {
-    console.log(e.target);
     this.setState({
       [e.target.name]: e.target.value
     });
@@ -87,6 +169,84 @@ class CadastrarCliente extends Component {
     });
   };
 
+  handleTabs = (event, value) => {
+    this.setState({ value });
+  };
+
+  handleBuscaCEP = () => {
+    const cleanedCEP = this.state.cep.replace(/[^0-9.]+/g, "");
+    const searchURL = `https://viacep.com.br/ws/${cleanedCEP}/json/`;
+
+    const resetAddress = (err = false) => {
+      this.setState({
+        estado: "",
+        cidade: "",
+        bairro: "",
+        rua: "",
+        cepError: err
+      });
+    };
+
+    if (cleanedCEP.length === 8) {
+      fetch(searchURL)
+        .then(response => response.json())
+        .then(data => {
+          if (!data.erro) {
+            this.setState({
+              estado: data.uf,
+              cidade: data.localidade,
+              bairro: data.bairro,
+              rua: data.logradouro,
+              cepError: false
+            });
+          } else {
+            resetAddress(true);
+          }
+        });
+    } else if (cleanedCEP.length > 0) {
+      resetAddress(true);
+    } else {
+      resetAddress(false);
+    }
+  };
+
+  handleSubmit = event => {
+    event.preventDefault();
+
+    const getFormData = () => {
+      return {
+        nome: this.state.nome,
+        email: this.state.email,
+        celular: this.state.celular,
+        cpf: this.state.cpf,
+        profissao: this.state.profissao,
+        dataNascimento: this.state.dataNascimento,
+        sexo: this.state.sexo,
+        indicacao: {
+          value: this.state.indicacao.value,
+          complemento: this.state.indicacao.complemento
+        },
+        cep: this.state.cep,
+        estado: this.state.estado,
+        cidade: this.state.cidade,
+        bairro: this.state.bairro,
+        rua: this.state.rua,
+        numero: this.state.numero,
+        complemento: this.state.complemento
+      };
+    };
+
+    if (!sendingData) {
+      sendingData = true;
+      this.setState({
+        sendingData: true
+      });
+      const formData = getFormData();
+      this.props.createClient(formData);
+      this.props.history.push("/clientes");
+    }
+  };
+
   errName = () => {
     const { nome } = this.state;
     return nome && nome.length < 3;
@@ -94,16 +254,13 @@ class CadastrarCliente extends Component {
 
   errEmail = () => {
     const { email } = this.state;
-    return email && !isEmail(email);
+    return email && !validator.isEmail(email);
   };
 
   errCelular = () => {
     const { celular } = this.state;
-    return celular && celular.length < 14;
-  };
-
-  handleTabs = (event, value) => {
-    this.setState({ value });
+    const cleanedCelular = celular.replace(/[^0-9.]+/g, "");
+    return celular && cleanedCelular.length < 10;
   };
 
   getMainForm = () => {
@@ -166,6 +323,7 @@ class CadastrarCliente extends Component {
               value={this.state.celular}
               onChange={this.handleChange}
               type="tel"
+              inputComponent={PhoneMask}
             />
             <FormHelperText id="celular-error-text">
               {this.errCelular()
@@ -185,7 +343,9 @@ class CadastrarCliente extends Component {
         <Grid item xs={3}>
           <FormControl
             className={classes.fwFormControl}
-            error={this.errName() || false}
+            error={
+              (this.state.cpf && !validator.isCPF(this.state.cpf)) || false
+            }
             aria-describedby="cpf-error-text"
             fullWidth
           >
@@ -194,9 +354,12 @@ class CadastrarCliente extends Component {
               id="cpf"
               value={this.state.cpf}
               onChange={this.handleChange}
+              inputComponent={CPFMask}
             />
             <FormHelperText id="cpf-error-text">
-              {this.errName() ? "Preencha o CPF corretamente" : null}
+              {this.state.cpf && !validator.isCPF(this.state.cpf)
+                ? "Preencha o CPF corretamente"
+                : null}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -311,12 +474,13 @@ class CadastrarCliente extends Component {
 
   getAddressForm = () => {
     const { classes } = this.props;
+    const cleanedCEP = this.state.cep.replace(/[^0-9.]+/g, "");
     return (
       <React.Fragment>
         <Grid item xs={2}>
           <FormControl
             className={classes.fwFormControl}
-            error={this.errName() || false}
+            error={this.state.cepError || false}
             aria-describedby="cep-error-text"
             fullWidth
           >
@@ -325,9 +489,11 @@ class CadastrarCliente extends Component {
               id="cep"
               value={this.state.cep}
               onChange={this.handleChange}
+              onKeyUp={this.handleBuscaCEP}
+              inputComponent={CEPMask}
             />
             <FormHelperText id="cep-error-text">
-              {this.errName() ? "Preencha o CEP corretamente" : null}
+              {this.state.cepError ? "Preencha o CEP corretamente" : null}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -335,18 +501,22 @@ class CadastrarCliente extends Component {
         <Grid item xs={2}>
           <FormControl
             className={classes.fwFormControl}
-            error={this.errName() || false}
+            error={this.state.cepError || false}
             aria-describedby="estado-error-text"
             fullWidth
           >
             <InputLabel htmlFor="estado-error-text">Estado</InputLabel>
-            <Input
-              id="estado"
-              value={this.state.estado}
-              onChange={this.handleChange}
-            />
+            <Tooltip
+              title="Preencha o CEP"
+              disableHoverListener={
+                !this.state.cepError && cleanedCEP.length === 8
+              }
+              placement="bottom"
+            >
+              <Input id="estado" value={this.state.estado} readOnly />
+            </Tooltip>
             <FormHelperText id="estado-error-text">
-              {this.errName() ? "CEP incorreto" : null}
+              {this.state.cepError ? "CEP incorreto" : null}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -354,18 +524,22 @@ class CadastrarCliente extends Component {
         <Grid item xs={2}>
           <FormControl
             className={classes.fwFormControl}
-            error={this.errName() || false}
+            error={this.state.cepError || false}
             aria-describedby="cidade-error-text"
             fullWidth
           >
             <InputLabel htmlFor="cidade-error-text">Cidade</InputLabel>
-            <Input
-              id="cidade"
-              value={this.state.cidade}
-              onChange={this.handleChange}
-            />
+            <Tooltip
+              title="Preencha o CEP"
+              disableHoverListener={
+                !this.state.cepError && cleanedCEP.length === 8
+              }
+              placement="bottom"
+            >
+              <Input id="cidade" value={this.state.cidade} readOnly />
+            </Tooltip>
             <FormHelperText id="cidade-error-text">
-              {this.errName() ? "CEP incorreto" : null}
+              {this.state.cepError ? "CEP incorreto" : null}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -373,18 +547,22 @@ class CadastrarCliente extends Component {
         <Grid item xs={2}>
           <FormControl
             className={classes.fwFormControl}
-            error={this.errName() || false}
+            error={this.state.cepError || false}
             aria-describedby="bairro-error-text"
             fullWidth
           >
             <InputLabel htmlFor="bairro-error-text">Bairro</InputLabel>
-            <Input
-              id="bairro"
-              value={this.state.bairro}
-              onChange={this.handleChange}
-            />
+            <Tooltip
+              title="Preencha o CEP"
+              disableHoverListener={
+                !this.state.cepError && cleanedCEP.length === 8
+              }
+              placement="bottom"
+            >
+              <Input id="bairro" value={this.state.bairro} readOnly />
+            </Tooltip>
             <FormHelperText id="bairro-error-text">
-              {this.errName() ? "CEP incorreto" : null}
+              {this.state.cepError ? "CEP incorreto" : null}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -392,18 +570,22 @@ class CadastrarCliente extends Component {
         <Grid item xs={4}>
           <FormControl
             className={classes.fwFormControl}
-            error={this.errName() || false}
+            error={this.state.cepError || false}
             aria-describedby="rua-error-text"
             fullWidth
           >
             <InputLabel htmlFor="rua-error-text">Rua</InputLabel>
-            <Input
-              id="rua"
-              value={this.state.rua}
-              onChange={this.handleChange}
-            />
+            <Tooltip
+              title="Preencha o CEP"
+              disableHoverListener={
+                !this.state.cepError && cleanedCEP.length === 8
+              }
+              placement="bottom"
+            >
+              <Input id="rua" value={this.state.rua} readOnly />
+            </Tooltip>
             <FormHelperText id="rua-error-text">
-              {this.errName() ? "CEP incorreto" : null}
+              {this.state.cepError ? "CEP incorreto" : null}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -419,7 +601,7 @@ class CadastrarCliente extends Component {
           </FormControl>
         </Grid>
 
-        <Grid item xs={2}>
+        <Grid item xs={3}>
           <FormControl className={classes.fwFormControl} fullWidth>
             <InputLabel htmlFor="complemento-error-text">
               Complemento
@@ -435,9 +617,14 @@ class CadastrarCliente extends Component {
     );
   };
 
+  getLoadingProgress = () => {
+    return <LinearProgress color="secondary" />;
+  };
+
   render() {
     const { classes } = this.props;
     const { value } = this.state;
+    const formValidado = validaDados.cadastro(this.state);
     return (
       <React.Fragment>
         <div className={classes.appBarSpacer} />
@@ -446,6 +633,7 @@ class CadastrarCliente extends Component {
             Cadastrar Cliente
           </Typography>
         </Slide>
+        {this.state.sendingData ? this.getLoadingProgress() : null}
         <div
           style={{ marginTop: "20px", marginBottom: "30px" }}
           className="paper-form"
@@ -478,7 +666,11 @@ class CadastrarCliente extends Component {
         </div>
         <Grid container justify="flex-end">
           <MuiThemeProvider theme={themes.buttonTheme}>
-            <Fab color="primary">
+            <Fab
+              color="primary"
+              disabled={!formValidado}
+              onClick={this.handleSubmit}
+            >
               <CheckIcon />
             </Fab>
           </MuiThemeProvider>
@@ -488,4 +680,13 @@ class CadastrarCliente extends Component {
   }
 }
 
-export default CadastrarCliente;
+const mapDispatchToProps = dispatch => {
+  return {
+    createClient: client => dispatch(createClient(client))
+  };
+};
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(CadastrarCliente);
