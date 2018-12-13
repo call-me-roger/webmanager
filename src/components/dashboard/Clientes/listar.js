@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 // General Classes
 import { generalStyles } from "../@includes/themes";
 import withMultipleStyles from "../@includes/themes/withMultipleStyles";
@@ -16,15 +17,15 @@ import {
   TableSortLabel,
   Toolbar,
   Typography,
-  Slide,
   Grow,
   Paper,
   Checkbox,
   LinearProgress
 } from "@material-ui/core";
-// Material Icons
 import IconButton from "@material-ui/core/IconButton";
 import Tooltip from "@material-ui/core/Tooltip";
+// Material Icons
+import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 import FilterListIcon from "@material-ui/icons/FilterList";
 import { lighten } from "@material-ui/core/styles/colorManipulator";
@@ -34,6 +35,7 @@ import { firestoreConnect } from "react-redux-firebase";
 import { compose } from "redux";
 // Complements
 import moment from "moment";
+import PageHeader from "../@includes/templates/PageHeader";
 
 function desc(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -75,7 +77,8 @@ const rows = [
     label: "Nome"
   },
   { id: "clientEmail", numeric: true, disablePadding: false, label: "Email" },
-  { id: "clientPhone", numeric: true, disablePadding: false, label: "Celular" }
+  { id: "clientPhone", numeric: true, disablePadding: false, label: "Celular" },
+  { id: "edit", numeric: false, disablePadding: false, label: "Editar" }
 ];
 
 class EnhancedTableHead extends React.Component {
@@ -223,6 +226,11 @@ class ListarClientes extends React.Component {
     rowsPerPage: 5
   };
 
+  componentDidMount() {
+    const { clients } = this.props;
+    if (clients) this.setClientsData(clients);
+  }
+
   // Table Functions
   handleRequestSort = (event, property) => {
     const orderBy = property;
@@ -279,14 +287,16 @@ class ListarClientes extends React.Component {
     let clientsData = [];
     if (clients) {
       Object.keys(clients).map(clientID => {
-        const { nome, email, celular, createdAt } = clients[clientID];
-        clientsData.push({
-          id: clientID,
-          clientName: nome,
-          clientEmail: email,
-          clientPhone: celular,
-          registrationDate: createdAt
-        });
+        if (clients[clientID]) {
+          const { nome, email, celular, createdAt } = clients[clientID];
+          clientsData.push({
+            id: clientID,
+            clientName: nome,
+            clientEmail: email,
+            clientPhone: celular,
+            registrationDate: createdAt
+          });
+        }
         return true;
       });
       this.setState({ clients: clientsData });
@@ -310,104 +320,105 @@ class ListarClientes extends React.Component {
       rowsPerPage - Math.min(rowsPerPage, clients.length - page * rowsPerPage);
     return (
       <React.Fragment>
-        <div className={classes.appBarSpacer} />
-
-        <Slide in={true} direction="down">
-          <Typography variant="h4" gutterBottom component="h2">
-            Listar clientes
-          </Typography>
-        </Slide>
+        <PageHeader title="Listar clientes" backRoute="/clientes" />
         {isRequesting ? this.getLoadingProgress() : null}
 
-        <Grow in={true} direction="down">
-          <div
-            className={classes.tableContainer}
-            style={{ marginTop: "20px", marginBottom: "30px" }}
-          >
-            <Paper className={classes.root}>
-              <EnhancedTableToolbar numSelected={selected.length} />
-              <div className={classes.tableWrapper}>
-                <Table className={classes.table} aria-labelledby="tableTitle">
-                  <EnhancedTableHead
-                    numSelected={selected.length}
-                    order={order}
-                    orderBy={orderBy}
-                    onSelectAllClick={this.handleSelectAllClick}
-                    onRequestSort={this.handleRequestSort}
-                    rowCount={clients.length}
-                  />
-                  <TableBody>
-                    {stableSort(clients, getSorting(order, orderBy))
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map(n => {
-                        const isSelected = this.isSelected(n.id);
-                        return (
-                          <TableRow
-                            hover
-                            onClick={event => this.handleClick(event, n.id)}
-                            role="checkbox"
-                            aria-checked={isSelected}
-                            tabIndex={-1}
-                            key={n.id}
-                            selected={isSelected}
-                          >
-                            <TableCell padding="checkbox">
-                              <Checkbox checked={isSelected} />
-                            </TableCell>
-                            <TableCell
-                              component="th"
-                              scope="row"
-                              padding="none"
+        <Grow in={true}>
+          <React.Fragment>
+            <div
+              className={classes.tableContainer}
+              style={{ marginTop: "20px", marginBottom: "30px" }}
+            >
+              <Paper className={classes.root}>
+                <EnhancedTableToolbar numSelected={selected.length} />
+                <div className={classes.tableWrapper}>
+                  <Table className={classes.table} aria-labelledby="tableTitle">
+                    <EnhancedTableHead
+                      numSelected={selected.length}
+                      order={order}
+                      orderBy={orderBy}
+                      onSelectAllClick={this.handleSelectAllClick}
+                      onRequestSort={this.handleRequestSort}
+                      rowCount={clients.length}
+                    />
+                    <TableBody>
+                      {stableSort(clients, getSorting(order, orderBy))
+                        .slice(
+                          page * rowsPerPage,
+                          page * rowsPerPage + rowsPerPage
+                        )
+                        .map(n => {
+                          const isSelected = this.isSelected(n.id);
+                          return (
+                            <TableRow
+                              hover
+                              onClick={event => this.handleClick(event, n.id)}
+                              role="checkbox"
+                              aria-checked={isSelected}
+                              tabIndex={-1}
+                              key={n.id}
+                              selected={isSelected}
                             >
-                              {moment(n.registrationDate.toDate()).calendar()}
+                              <TableCell padding="checkbox">
+                                <Checkbox checked={isSelected} />
+                              </TableCell>
+                              <TableCell
+                                component="th"
+                                scope="row"
+                                padding="none"
+                              >
+                                {moment(n.registrationDate.toDate()).calendar()}
+                              </TableCell>
+                              <TableCell
+                                component="th"
+                                scope="row"
+                                padding="none"
+                              >
+                                {n.clientName}
+                              </TableCell>
+                              <TableCell numeric>{n.clientEmail}</TableCell>
+                              <TableCell numeric>{n.clientPhone}</TableCell>
+                              <TableCell>
+                                <Link to={`/clientes/editar/${n.id}`}>
+                                  <EditIcon color="secondary" />
+                                </Link>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      {emptyRows > 0 && (
+                        <TableRow style={{ height: 49 * emptyRows }}>
+                          {clients.length === 0 && !isRequesting ? (
+                            <TableCell colSpan={6}>
+                              <Typography align="center">
+                                Nenhum cliente encontrado
+                              </Typography>
                             </TableCell>
-                            <TableCell
-                              component="th"
-                              scope="row"
-                              padding="none"
-                            >
-                              {n.clientName}
-                            </TableCell>
-                            <TableCell numeric>{n.clientEmail}</TableCell>
-                            <TableCell numeric>{n.clientPhone}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    {emptyRows > 0 && (
-                      <TableRow style={{ height: 49 * emptyRows }}>
-                        {clients.length === 0 && !isRequesting ? (
-                          <TableCell colSpan={6}>
-                            <Typography align="center">
-                              Nenhum cliente encontrado
-                            </Typography>
-                          </TableCell>
-                        ) : null}
-                        <TableCell colSpan={6} />
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={clients.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                backIconButtonProps={{ "aria-label": "Página anterior" }}
-                nextIconButtonProps={{ "aria-label": "Próxima página" }}
-                onChangePage={this.handleChangePage}
-                onChangeRowsPerPage={this.handleChangeRowsPerPage}
-                labelRowsPerPage="Clientes por página"
-                labelDisplayedRows={({ from, to, count }) =>
-                  `Clientes: ${from}-${to} de ${count}`
-                }
-              />
-            </Paper>
-          </div>
+                          ) : null}
+                          <TableCell colSpan={6} />
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 25]}
+                  component="div"
+                  count={clients.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  backIconButtonProps={{ "aria-label": "Página anterior" }}
+                  nextIconButtonProps={{ "aria-label": "Próxima página" }}
+                  onChangePage={this.handleChangePage}
+                  onChangeRowsPerPage={this.handleChangeRowsPerPage}
+                  labelRowsPerPage="Clientes por página"
+                  labelDisplayedRows={({ from, to, count }) =>
+                    `Clientes: ${from}-${to} de ${count}`
+                  }
+                />
+              </Paper>
+            </div>
+          </React.Fragment>
         </Grow>
       </React.Fragment>
     );

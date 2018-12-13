@@ -3,19 +3,16 @@ import React, { Component } from "react";
 import { generalStyles } from "../@includes/themes";
 import withMultipleStyles from "../@includes/themes/withMultipleStyles";
 // Material Components
-import Typography from "@material-ui/core/Typography";
+// import Typography from "@material-ui/core/Typography";
 // Includes
+import PageHeader from "../@includes/templates/PageHeader";
 
 class Integrações extends Component {
   state = {};
   render() {
-    const { classes } = this.props;
     return (
       <React.Fragment>
-        <div className={classes.appBarSpacer} />
-        <Typography variant="h4" gutterBottom component="h2">
-          Integrações
-        </Typography>
+        <PageHeader title="Integrações" />
       </React.Fragment>
     );
   }

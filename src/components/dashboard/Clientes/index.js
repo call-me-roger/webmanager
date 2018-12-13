@@ -10,23 +10,18 @@ import {
   CardActions,
   Button,
   Grid,
-  Grow,
-  Slide
+  Grow
 } from "@material-ui/core";
 import { Link } from "react-router-dom";
+// Includes
+import PageHeader from "../@includes/templates/PageHeader";
 
 class Clientes extends Component {
   state = {};
   render() {
-    const { classes } = this.props;
     return (
       <React.Fragment>
-        <div className={classes.appBarSpacer} />
-        <Slide in={true} direction="down">
-          <Typography variant="h4" gutterBottom component="h2">
-            Clientes
-          </Typography>
-        </Slide>
+        <PageHeader title="Clientes" />
         <Grid container spacing={16}>
           <Grow in={true}>
             <Grid item sm={6}>

@@ -7,6 +7,7 @@ import Typography from "@material-ui/core/Typography";
 // Includes
 import WeekSalesChart from "./WeekSalesChart";
 import BestSellerProducts from "./BestSellerProducts";
+import PageHeader from "../@includes/templates/PageHeader";
 
 class Inicio extends Component {
   state = {};
@@ -14,7 +15,7 @@ class Inicio extends Component {
     const { classes } = this.props;
     return (
       <React.Fragment>
-        <div className={classes.appBarSpacer} />
+        <PageHeader title="Dashboard" />
         <Typography variant="h4" gutterBottom component="h2">
           Vendas da semana
         </Typography>

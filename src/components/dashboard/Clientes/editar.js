@@ -38,8 +38,9 @@ import PageHeader from "../@includes/templates/PageHeader";
 // Database
 import { compose } from "redux";
 import { connect } from "react-redux";
+import { firestoreConnect } from "react-redux-firebase";
 import {
-  createClient,
+  updateClient,
   resetSubmits
 } from "../../../store/actions/clientActions";
 
@@ -124,7 +125,7 @@ function CEPMask(props) {
 // END Form Masks
 
 // Main Component
-class CadastrarCliente extends Component {
+class EditarCliente extends Component {
   state = {
     nome: "",
     email: "",
@@ -148,6 +149,21 @@ class CadastrarCliente extends Component {
     sendingData: false,
     value: 0 // Tabs
   };
+
+  constructor(props) {
+    super(props);
+    const { clientData } = props;
+    if (clientData) {
+      this.state = {
+        ...this.state,
+        ...clientData
+      };
+    }
+  }
+
+  componentWillReceiveProps({ clientData }) {
+    if (clientData) this.setState({ ...clientData });
+  }
 
   // Form Handles
   handleChange = e => {
@@ -183,8 +199,9 @@ class CadastrarCliente extends Component {
   handleSubmit = event => {
     event.preventDefault();
 
+    const { cid } = this.props.match.params;
     if (!this.props.isSendingData) {
-      this.props.createClient(this.state);
+      this.props.updateClient({ ...this.state, cid: cid });
     }
   };
   // END Form Handles
@@ -287,6 +304,7 @@ class CadastrarCliente extends Component {
   };
 
   getConfirmationModal = () => {
+    const { cid } = this.props.match.params;
     return (
       <Modal
         aria-labelledby="simple-modal-title"
@@ -295,11 +313,10 @@ class CadastrarCliente extends Component {
       >
         <div style={this.getModalStyle()} className={this.props.classes.paper}>
           <Typography variant="h6" id="modal-title" color="secondary">
-            Cliente Adicionado
+            Cliente Atualizado
           </Typography>
           <Typography variant="subtitle1" id="simple-modal-description">
-            Agora você pode editar e configurar a conta do cliente conforme
-            necessário.
+            Todos os dados do cliente foram atualizados no sistema.
           </Typography>
           <Grid
             container
@@ -307,7 +324,9 @@ class CadastrarCliente extends Component {
             style={{ paddingTop: "10px" }}
           >
             <Button
-              onClick={() => this.redirectConfirmation("/clientes")}
+              onClick={() =>
+                this.redirectConfirmation("/clientes/editar/" + cid)
+              }
               variant="contained"
               id="voltar"
             >
@@ -326,6 +345,7 @@ class CadastrarCliente extends Component {
       </Modal>
     );
   };
+
   // END Handle Functions
 
   // Tabs Components
@@ -685,7 +705,7 @@ class CadastrarCliente extends Component {
   // END Tabs Compoenents
 
   render() {
-    const { createClientValidation, clientCreated } = this.props;
+    const { createClientValidation, clientUpdated, isRequesting } = this.props;
     const { value } = this.state;
     const isSendingData = this.props.isSendingData
       ? this.props.isSendingData
@@ -694,71 +714,101 @@ class CadastrarCliente extends Component {
 
     return (
       <React.Fragment>
-        <PageHeader title="Cadastrar cliente" backRoute="/clientes" />
-        {isSendingData ? this.getLoadingProgress() : null}
+        <PageHeader
+          title="Informações do cliente"
+          backRoute="/clientes/listar"
+        />
+        {isSendingData || isRequesting ? this.getLoadingProgress() : null}
 
-        {clientCreated ? this.getConfirmationModal() : null}
+        {clientUpdated ? this.getConfirmationModal() : null}
 
-        <div
-          style={{ marginTop: "20px", marginBottom: "30px" }}
-          className="paper-form"
-        >
-          <Zoom in={true}>
-            <AppBar position="static" color="default" elevation={2}>
-              <Tabs
-                value={value}
-                onChange={this.handleTabs}
-                scrollable
-                scrollButtons="on"
-                indicatorColor="secondary"
-                textColor="secondary"
-              >
-                <Tab label="Essencial" icon={<PhoneIcon />} />
-                <Tab label="Perfil" icon={<PersonPinIcon />} />
-                <Tab label="Indicação" icon={<FavoriteIcon />} />
-                <Tab label="Endereço" icon={<PlaceIcon />} />
-              </Tabs>
-            </AppBar>
-          </Zoom>
-          {value === 0 && <TabContainer>{this.getMainForm()}</TabContainer>}
-          {value === 1 && (
-            <TabContainer>{this.getSecondaryForm()}</TabContainer>
-          )}
-          {value === 2 && (
-            <TabContainer>{this.getIndicationForm()}</TabContainer>
-          )}
-          {value === 3 && <TabContainer>{this.getAddressForm()}</TabContainer>}
-        </div>
-        {createClientValidation
-          ? this.displayErrorMessage(createClientValidation)
-          : null}
-        <Grid container justify="flex-end">
-          <MuiThemeProvider theme={buttonTheme}>
-            <Fab
-              color="primary"
-              disabled={!formValidado}
-              onClick={this.handleSubmit}
+        {!isRequesting && (
+          <Grid className="wrap-content">
+            <div
+              style={{ marginTop: "20px", marginBottom: "30px" }}
+              className="paper-form"
             >
-              <CheckIcon />
-            </Fab>
-          </MuiThemeProvider>
-        </Grid>
+              <Zoom in={true}>
+                <AppBar position="static" color="default" elevation={2}>
+                  <Tabs
+                    value={value}
+                    onChange={this.handleTabs}
+                    scrollable
+                    scrollButtons="on"
+                    indicatorColor="secondary"
+                    textColor="secondary"
+                  >
+                    <Tab label="Essencial" icon={<PhoneIcon />} />
+                    <Tab label="Perfil" icon={<PersonPinIcon />} />
+                    <Tab label="Indicação" icon={<FavoriteIcon />} />
+                    <Tab label="Endereço" icon={<PlaceIcon />} />
+                  </Tabs>
+                </AppBar>
+              </Zoom>
+              {value === 0 && <TabContainer>{this.getMainForm()}</TabContainer>}
+              {value === 1 && (
+                <TabContainer>{this.getSecondaryForm()}</TabContainer>
+              )}
+              {value === 2 && (
+                <TabContainer>{this.getIndicationForm()}</TabContainer>
+              )}
+              {value === 3 && (
+                <TabContainer>{this.getAddressForm()}</TabContainer>
+              )}
+            </div>
+            {createClientValidation
+              ? this.displayErrorMessage(createClientValidation)
+              : null}
+            <Grid container justify="flex-end">
+              <MuiThemeProvider theme={buttonTheme}>
+                <Fab
+                  color="primary"
+                  disabled={!formValidado}
+                  onClick={this.handleSubmit}
+                >
+                  <CheckIcon />
+                </Fab>
+              </MuiThemeProvider>
+            </Grid>
+          </Grid>
+        )}
+        {isRequesting && (
+          <Typography align="center" style={{ paddingTop: "15px" }}>
+            Carregando...
+          </Typography>
+        )}
       </React.Fragment>
     );
   }
 }
 
-const mapStateToProps = state => {
-  return {
+const mapStateToProps = (state, ownProps) => {
+  const { cid } = ownProps.match.params;
+  const requests = state.firestore.status.requesting;
+  const isRequesting = requests.clients === undefined ? true : requests.clients;
+  const clients = state.firestore.data.clients;
+  const clientInformation = clients ? clients[cid] : null;
+  const isSendingData = state.client.isSendingData;
+  if (state.client.isSendingData) {
+    console.log("maping");
+  }
+
+  const defaultData = {
     createClientValidation: state.client.createClientValidation,
-    isSendingData: state.client.isSendingData,
-    clientCreated: state.client.clientCreated
+    clientUpdated: state.client.clientUpdated,
+    isSendingData,
+    clientInformation,
+    isRequesting
   };
+
+  const clientData = !isSendingData ? clientInformation : null;
+
+  return { ...defaultData, clientData };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    createClient: client => dispatch(createClient(client)),
+    updateClient: client => dispatch(updateClient(client)),
     resetSubmits: () => dispatch(resetSubmits())
   };
 };
@@ -768,5 +818,6 @@ export default compose(
   connect(
     mapStateToProps,
     mapDispatchToProps
-  )
-)(CadastrarCliente);
+  ),
+  firestoreConnect([{ collection: "clients" }])
+)(EditarCliente);

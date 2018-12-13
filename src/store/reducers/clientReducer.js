@@ -12,27 +12,37 @@ const clientReducer = (state = initSate, action) => {
         isSendingData: false,
         clientCreated: true
       };
-    case "CREATE_CLIENT_VALIDATION":
+    case "UPDATE_CLIENT":
+      console.log("Cliente atualizado", action.client);
+      return {
+        ...state,
+        createClientValidation: null,
+        isSendingData: false,
+        clientUpdated: true
+      };
+    case "CLIENT_VALIDATION":
       console.log("Erro de validação:", action.message);
       return {
         ...state,
         createClientValidation: action.message,
         isSendingData: false
       };
-    case "CREATE_CLIENT_ERROR":
+    case "CLIENT_ERROR":
       console.log("Erro ao salvar o cliente", action.err);
-      return { ...state, isSendingData: false };
-    case "SENDING_DATA":
       return {
         ...state,
-        isSendingData: true
+        createClientValidation: "Erro ao salvar os dados",
+        isSendingData: false
       };
-    case "RESET_CREATING":
+    case "SENDING_DATA":
+      return { ...state, isSendingData: true };
+    case "RESET_SUBMITS":
       return {
         ...state,
         createClientValidation: null,
         isSendingData: false,
-        clientCreated: false
+        clientCreated: false,
+        clientUpdated: false
       };
     default:
       return state;
