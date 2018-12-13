@@ -86,13 +86,13 @@ const styles = theme => ({
       width: theme.spacing.unit * 9
     }
   },
-  appBarSpacer: theme.mixins.toolbar,
   content: {
     flexGrow: 1,
     padding: theme.spacing.unit * 3,
     height: "100vh",
     overflow: "auto"
   },
+  appBarSpacer: theme.mixins.toolbar,
   chartContainer: {
     marginLeft: -22
   },
@@ -113,6 +113,13 @@ const styles = theme => ({
   container: {
     paddingTop: 0,
     paddingBottom: 0
+  },
+  paper: {
+    position: "absolute",
+    width: theme.spacing.unit * 50,
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing.unit * 4
   }
 });
 
@@ -247,7 +254,7 @@ class Dashboard extends Component {
             <NavgationLinks currentRoute={currentLocation} />
           </Drawer>
           <main className={classes.content}>
-            <RenderComponent {...this.props} classes={classes} />
+            <RenderComponent {...this.props} classes={null} />
           </main>
         </div>
       </MuiThemeProvider>

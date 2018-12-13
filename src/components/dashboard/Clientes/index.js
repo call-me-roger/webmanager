@@ -1,4 +1,8 @@
 import React, { Component } from "react";
+// General Classes
+import { generalStyles } from "../@includes/themes";
+import withMultipleStyles from "../@includes/themes/withMultipleStyles";
+// Material Components
 import {
   Typography,
   Card,
@@ -10,7 +14,6 @@ import {
   Slide
 } from "@material-ui/core";
 import { Link } from "react-router-dom";
-// Includes
 
 class Clientes extends Component {
   state = {};
@@ -73,4 +76,4 @@ class Clientes extends Component {
   }
 }
 
-export default Clientes;
+export default withMultipleStyles(generalStyles)(Clientes);

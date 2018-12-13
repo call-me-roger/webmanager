@@ -5,8 +5,10 @@ import "moment/locale/pt-br";
 import Dashboard from "./components/Dashboard";
 import Inicio from "./components/dashboard/Inicio";
 import Vendas from "./components/dashboard/Vendas";
+// Clientes
 import Clientes from "./components/dashboard/Clientes";
 import CadastrarCliente from "./components/dashboard/Clientes/cadastrar";
+import ListarClientes from "./components/dashboard/Clientes/listar";
 import Relatorios from "./components/dashboard/Relatorios";
 import Integracoes from "./components/dashboard/Integracoes";
 
@@ -34,6 +36,10 @@ class App extends Component {
             <Route
               path="/clientes/cadastrar"
               render={() => <Dashboard Component={CadastrarCliente} />}
+            />
+            <Route
+              path="/clientes/listar"
+              render={() => <Dashboard Component={ListarClientes} />}
             />
             <Route
               path="/relatorios/:relatorio?"

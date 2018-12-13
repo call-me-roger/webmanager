@@ -1,4 +1,8 @@
 import React, { Component } from "react";
+// General Classes
+import { generalStyles } from "../@includes/themes";
+import withMultipleStyles from "../@includes/themes/withMultipleStyles";
+// Material Components
 import Typography from "@material-ui/core/Typography";
 // Includes
 import WeekSalesChart from "./WeekSalesChart";
@@ -28,4 +32,4 @@ class Inicio extends Component {
   }
 }
 
-export default Inicio;
+export default withMultipleStyles(generalStyles)(Inicio);

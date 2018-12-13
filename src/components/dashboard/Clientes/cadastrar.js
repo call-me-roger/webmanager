@@ -1,4 +1,8 @@
 import React, { Component } from "react";
+// General Classes
+import { buttonTheme, generalStyles } from "../@includes/themes";
+import withMultipleStyles from "../@includes/themes/withMultipleStyles";
+// Material Components
 import {
   Typography,
   Grid,
@@ -10,9 +14,11 @@ import {
   Select,
   MenuItem,
   Paper,
+  Modal,
+  Fab,
+  Button,
   Slide,
   Zoom,
-  Fab,
   Tooltip,
   LinearProgress
 } from "@material-ui/core";
@@ -26,15 +32,16 @@ import PlaceIcon from "@material-ui/icons/Place";
 import CheckIcon from "@material-ui/icons/Check";
 // Custom Pallet
 import { MuiThemeProvider } from "@material-ui/core/styles";
-import * as themes from "../@includes/themes";
 // Includes
 import * as validator from "../@functions/validator";
 import * as validaDados from "./validaDados";
 // Database
+import { compose } from "redux";
 import { connect } from "react-redux";
-import { createClient } from "../../../store/actions/clientActions";
-
-let sendingData = false;
+import {
+  createClient,
+  resetCreating
+} from "../../../store/actions/clientActions";
 
 function TabContainer(props) {
   return (
@@ -46,6 +53,7 @@ function TabContainer(props) {
   );
 }
 
+// Form Masks
 function PhoneMask(props) {
   const { inputRef, ...other } = props;
 
@@ -113,7 +121,9 @@ function CEPMask(props) {
     />
   );
 }
+// END Form Masks
 
+// Main Component
 class CadastrarCliente extends Component {
   state = {
     nome: "",
@@ -139,6 +149,7 @@ class CadastrarCliente extends Component {
     value: 0 // Tabs
   };
 
+  // Form Handles
   handleChange = e => {
     this.setState({
       [e.target.id]: e.target.value
@@ -169,6 +180,34 @@ class CadastrarCliente extends Component {
     });
   };
 
+  handleSubmit = event => {
+    event.preventDefault();
+
+    if (!this.props.isSendingData) {
+      this.props.createClient(this.state);
+    }
+  };
+  // END Form Handles
+
+  // Form Errors
+  errName = () => {
+    const { nome } = this.state;
+    return nome && nome.length < 3;
+  };
+
+  errEmail = () => {
+    const { email } = this.state;
+    return email && !validator.isEmail(email);
+  };
+
+  errCelular = () => {
+    const { celular } = this.state;
+    const cleanedCelular = celular.replace(/[^0-9.]+/g, "");
+    return celular && cleanedCelular.length < 10;
+  };
+  // END Form Errors
+
+  // Handle Functions
   handleTabs = (event, value) => {
     this.setState({ value });
   };
@@ -210,59 +249,86 @@ class CadastrarCliente extends Component {
     }
   };
 
-  handleSubmit = event => {
-    event.preventDefault();
+  getLoadingProgress = () => {
+    return <LinearProgress color="secondary" />;
+  };
 
-    const getFormData = () => {
-      return {
-        nome: this.state.nome,
-        email: this.state.email,
-        celular: this.state.celular,
-        cpf: this.state.cpf,
-        profissao: this.state.profissao,
-        dataNascimento: this.state.dataNascimento,
-        sexo: this.state.sexo,
-        indicacao: {
-          value: this.state.indicacao.value,
-          complemento: this.state.indicacao.complemento
-        },
-        cep: this.state.cep,
-        estado: this.state.estado,
-        cidade: this.state.cidade,
-        bairro: this.state.bairro,
-        rua: this.state.rua,
-        numero: this.state.numero,
-        complemento: this.state.complemento
-      };
+  displayErrorMessage = message => {
+    return (
+      <Paper
+        style={{ padding: "8px 16px 8px 16px", margin: "10px 0 15px 0" }}
+        elevation={3}
+      >
+        <Typography variant="subtitle1" color="error">
+          {message}
+        </Typography>
+      </Paper>
+    );
+  };
+
+  rand = () => {
+    return Math.round(Math.random() * 20) - 10;
+  };
+
+  getModalStyle = () => {
+    const top = 50;
+    const left = 50;
+
+    return {
+      top: `${top}%`,
+      left: `${left}%`,
+      transform: `translate(-${top}%, -${left}%)`
     };
-
-    if (!sendingData) {
-      sendingData = true;
-      this.setState({
-        sendingData: true
-      });
-      const formData = getFormData();
-      this.props.createClient(formData);
-      this.props.history.push("/clientes");
-    }
   };
 
-  errName = () => {
-    const { nome } = this.state;
-    return nome && nome.length < 3;
+  redirectConfirmation = route => {
+    this.props.resetCreating();
+    this.props.history.push(route);
   };
 
-  errEmail = () => {
-    const { email } = this.state;
-    return email && !validator.isEmail(email);
+  getConfirmationModal = () => {
+    return (
+      <Modal
+        aria-labelledby="simple-modal-title"
+        aria-describedby="simple-modal-description"
+        open={true}
+      >
+        <div style={this.getModalStyle()} className={this.props.classes.paper}>
+          <Typography variant="h6" id="modal-title" color="secondary">
+            Cliente Adicionado
+          </Typography>
+          <Typography variant="subtitle1" id="simple-modal-description">
+            Agora você pode editar e configurar a conta do cliente conforme
+            necessário.
+          </Typography>
+          <Grid
+            container
+            justify="space-between"
+            style={{ paddingTop: "10px" }}
+          >
+            <Button
+              onClick={() => this.redirectConfirmation("/clientes")}
+              variant="contained"
+              id="voltar"
+            >
+              Voltar
+            </Button>
+            <Button
+              onClick={() => this.redirectConfirmation("/clientes/listar")}
+              variant="contained"
+              color="primary"
+              id="listar"
+            >
+              Listar clientes
+            </Button>
+          </Grid>
+        </div>
+      </Modal>
+    );
   };
+  // END Handle Functions
 
-  errCelular = () => {
-    const { celular } = this.state;
-    const cleanedCelular = celular.replace(/[^0-9.]+/g, "");
-    return celular && cleanedCelular.length < 10;
-  };
-
+  // Tabs Components
   getMainForm = () => {
     const { classes } = this.props;
     return (
@@ -616,24 +682,29 @@ class CadastrarCliente extends Component {
       </React.Fragment>
     );
   };
-
-  getLoadingProgress = () => {
-    return <LinearProgress color="secondary" />;
-  };
+  // END Tabs Compoenents
 
   render() {
-    const { classes } = this.props;
+    const { classes, createClientValidation, clientCreated } = this.props;
     const { value } = this.state;
+    const isSendingData = this.props.isSendingData
+      ? this.props.isSendingData
+      : false;
     const formValidado = validaDados.cadastro(this.state);
+
     return (
       <React.Fragment>
         <div className={classes.appBarSpacer} />
+
         <Slide in={true} direction="down">
           <Typography variant="h4" gutterBottom component="h2">
             Cadastrar Cliente
           </Typography>
         </Slide>
-        {this.state.sendingData ? this.getLoadingProgress() : null}
+        {isSendingData ? this.getLoadingProgress() : null}
+
+        {clientCreated ? this.getConfirmationModal() : null}
+
         <div
           style={{ marginTop: "20px", marginBottom: "30px" }}
           className="paper-form"
@@ -664,8 +735,11 @@ class CadastrarCliente extends Component {
           )}
           {value === 3 && <TabContainer>{this.getAddressForm()}</TabContainer>}
         </div>
+        {createClientValidation
+          ? this.displayErrorMessage(createClientValidation)
+          : null}
         <Grid container justify="flex-end">
-          <MuiThemeProvider theme={themes.buttonTheme}>
+          <MuiThemeProvider theme={buttonTheme}>
             <Fab
               color="primary"
               disabled={!formValidado}
@@ -680,13 +754,25 @@ class CadastrarCliente extends Component {
   }
 }
 
-const mapDispatchToProps = dispatch => {
+const mapStateToProps = state => {
   return {
-    createClient: client => dispatch(createClient(client))
+    createClientValidation: state.client.createClientValidation,
+    isSendingData: state.client.isSendingData,
+    clientCreated: state.client.clientCreated
   };
 };
 
-export default connect(
-  null,
-  mapDispatchToProps
+const mapDispatchToProps = dispatch => {
+  return {
+    createClient: client => dispatch(createClient(client)),
+    resetCreating: () => dispatch(resetCreating())
+  };
+};
+
+export default compose(
+  withMultipleStyles(generalStyles),
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )
 )(CadastrarCliente);

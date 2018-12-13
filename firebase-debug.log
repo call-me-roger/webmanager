@@ -1,0 +1,17 @@
+[debug] [2018-12-12T00:36:52.891Z] ----------------------------------------------------------------------
+[debug] [2018-12-12T00:36:52.895Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Rogério\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2018-12-12T00:36:52.895Z] CLI Version:   6.1.2
+[debug] [2018-12-12T00:36:52.895Z] Platform:      win32
+[debug] [2018-12-12T00:36:52.895Z] Node Version:  v10.14.1
+[debug] [2018-12-12T00:36:52.897Z] Time:          Tue Dec 11 2018 22:36:52 GMT-0200 (GMT-02:00)
+[debug] [2018-12-12T00:36:52.897Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-12-12T00:36:52.941Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-12-12T00:36:52.942Z] > authorizing via signed-in user
+[debug] [2018-12-12T00:36:52.942Z] [iam] checking project web-manager-3bfd9 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2018-12-12T00:36:52.945Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2018-12-12T00:36:52.945Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+ <request body omitted>
+[debug] [2018-12-12T00:36:53.308Z] <<< HTTP RESPONSE 200
+[debug] [2018-12-12T00:36:53.508Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/web-manager-3bfd9:testIamPermissions  
+

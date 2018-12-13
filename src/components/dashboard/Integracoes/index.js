@@ -1,4 +1,8 @@
 import React, { Component } from "react";
+// General Classes
+import { generalStyles } from "../@includes/themes";
+import withMultipleStyles from "../@includes/themes/withMultipleStyles";
+// Material Components
 import Typography from "@material-ui/core/Typography";
 // Includes
 
@@ -17,4 +21,4 @@ class Integrações extends Component {
   }
 }
 
-export default Integrações;
+export default withMultipleStyles(generalStyles)(Integrações);
