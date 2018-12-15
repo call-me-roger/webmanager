@@ -12,6 +12,7 @@ import {
 import DashboardIcon from "@material-ui/icons/Dashboard";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
 import PeopleIcon from "@material-ui/icons/People";
+import StoreIcon from "@material-ui/icons/Store";
 import BarChartIcon from "@material-ui/icons/BarChart";
 import LayersIcon from "@material-ui/icons/Layers";
 import AssignmentIcon from "@material-ui/icons/Assignment";
@@ -43,6 +44,14 @@ class NavgationLinks extends Component {
               <PeopleIcon />
             </ListItemIcon>
             <ListItemText primary="Clientes" />
+          </ListItem>
+        </Link>
+        <Link to="/loja">
+          <ListItem button selected={currentRoute.includes("/loja")}>
+            <ListItemIcon>
+              <StoreIcon />
+            </ListItemIcon>
+            <ListItemText primary="Loja" />
           </ListItem>
         </Link>
         <Link to="/relatorios">

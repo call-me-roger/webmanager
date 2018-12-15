@@ -135,14 +135,14 @@ export const updateClient = clientData => {
               ? dispatchValidation(
                   "O CPF que você está tentando cadastrar já existe no sistema"
                 )
-              : updateClient();
+              : updtClient();
           });
       } else {
-        updateClient();
+        updtClient();
       }
     };
 
-    const updateClient = () => {
+    const updtClient = () => {
       const docRef = firebase
         .firestore()
         .collection("clients")
@@ -167,8 +167,99 @@ export const updateClient = clientData => {
   };
 };
 
+export const deleteClient = cid => {
+  return (dispatch, getState, { getFirebase }) => {
+    const firebase = getFirebase();
+
+    dispatch({ type: "SENDING_DATA" });
+
+    const dispatchValidation = message => {
+      dispatch({ type: "CLIENT_VALIDATION", message });
+    };
+
+    const docRef = firebase
+      .firestore()
+      .collection("clients")
+      .doc(cid);
+
+    docRef
+      .get()
+      .then(thisDoc => {
+        if (thisDoc.exists) {
+          docRef
+            .delete()
+            .then(() => {
+              dispatch({ type: "DELETE_CLIENT", cid });
+            })
+            .catch(err => {
+              dispatchValidation("Ocorreu um erro ao excluir o cliente");
+            });
+        } else {
+          dispatchValidation("Ocorreu um erro ao excluir o cliente");
+        }
+      })
+      .catch(err => {
+        dispatchValidation("Ocorreu um erro ao excluir o cliente");
+      });
+  };
+};
+
+export const deleteClients = clientsOBJ => {
+  return (dispatch, getState, { getFirebase, getFirestore }) => {
+    const firebase = getFirebase();
+    const firestore = getFirestore();
+    const batch = firestore.batch();
+
+    dispatch({ type: "SENDING_DATA" });
+
+    const handleDelete = async clientDocuments => {
+      clientDocuments.forEach(doc => batch.delete(doc));
+      batch
+        .commit()
+        .then(() => {
+          dispatch({ type: "DELETE_CLIENTS", clients: clientsOBJ });
+        })
+        .catch(err => {
+          dispatch({
+            type: "DELETE_CLIENTS_ERROR",
+            err: "Erro de exclusão"
+          });
+        });
+    };
+
+    if (typeof clientsOBJ === "object") {
+      const queryDocuments = async () => {
+        const getDocuments = Object.keys(clientsOBJ).map(async key => {
+          const cid = clientsOBJ[key];
+          const docRef = await firebase
+            .firestore()
+            .collection("clients")
+            .doc(cid);
+
+          return docRef;
+        });
+
+        return Promise.all(getDocuments);
+      };
+
+      queryDocuments().then(clientDocuments => {
+        handleDelete(clientDocuments);
+      });
+    } else {
+      console.log("Não foi possível executar a função");
+      dispatch({ type: "DELETE_CLIENTS_ERROR", err: "Formato inválido" });
+    }
+  };
+};
+
 export const resetSubmits = () => {
   return dispatch => {
     dispatch({ type: "RESET_SUBMITS" });
+  };
+};
+
+export const resetClientsList = () => {
+  return dispatch => {
+    dispatch({ type: "RESET_CLIENTS_LIST" });
   };
 };

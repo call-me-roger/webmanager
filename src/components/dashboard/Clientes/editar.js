@@ -14,12 +14,18 @@ import {
   Select,
   MenuItem,
   Paper,
-  Modal,
   Fab,
   Button,
   Zoom,
   Tooltip,
   LinearProgress
+} from "@material-ui/core";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from "@material-ui/core";
 import MaskedInput from "react-text-mask";
 // Tabs import
@@ -29,18 +35,21 @@ import FavoriteIcon from "@material-ui/icons/Favorite";
 import PersonPinIcon from "@material-ui/icons/PersonPin";
 import PlaceIcon from "@material-ui/icons/Place";
 import CheckIcon from "@material-ui/icons/Check";
+import DeleteIcon from "@material-ui/icons/Delete";
 // Custom Pallet
 import { MuiThemeProvider } from "@material-ui/core/styles";
 // Includes
 import * as validator from "../@functions/validator";
 import * as validaDados from "./validaDados";
 import PageHeader from "../@includes/templates/PageHeader";
+import SlideTransition from "../@includes/templates/SlideTransition";
 // Database
 import { compose } from "redux";
 import { connect } from "react-redux";
 import { firestoreConnect } from "react-redux-firebase";
 import {
   updateClient,
+  deleteClient,
   resetSubmits
 } from "../../../store/actions/clientActions";
 
@@ -147,7 +156,9 @@ class EditarCliente extends Component {
     complemento: "",
     cepError: false,
     sendingData: false,
-    value: 0 // Tabs
+    deleteConfirmationOpen: false,
+    tabIndex: 0, // Tabs,
+    redirectData: null
   };
 
   constructor(props) {
@@ -161,8 +172,22 @@ class EditarCliente extends Component {
     }
   }
 
-  componentWillReceiveProps({ clientData }) {
+  componentWillReceiveProps({ clientData, clientDeleted }) {
     if (clientData) this.setState({ ...clientData });
+
+    const redirectData = {
+      pathname: "/clientes/listar",
+      routeProps: {
+        snackbar: { message: "Cliente excluido", variant: "success" }
+      }
+    };
+    if (clientDeleted) this.setState({ redirectData });
+  }
+
+  componentDidUpdate() {
+    const { redirectData } = this.state;
+    if (redirectData)
+      this.redirectConfirmation(redirectData.pathname, redirectData.routeProps);
   }
 
   // Form Handles
@@ -204,6 +229,12 @@ class EditarCliente extends Component {
       this.props.updateClient({ ...this.state, cid: cid });
     }
   };
+
+  openDeleteDialog = () => {
+    this.setState({
+      deleteConfirmationOpen: true
+    });
+  };
   // END Form Handles
 
   // Form Errors
@@ -225,8 +256,8 @@ class EditarCliente extends Component {
   // END Form Errors
 
   // Handle Functions
-  handleTabs = (event, value) => {
-    this.setState({ value });
+  handleTabs = (event, tabIndex) => {
+    this.setState({ tabIndex });
   };
 
   handleBuscaCEP = () => {
@@ -283,66 +314,100 @@ class EditarCliente extends Component {
     );
   };
 
-  rand = () => {
-    return Math.round(Math.random() * 20) - 10;
-  };
-
-  getModalStyle = () => {
-    const top = 50;
-    const left = 50;
-
-    return {
-      top: `${top}%`,
-      left: `${left}%`,
-      transform: `translate(-${top}%, -${left}%)`
-    };
-  };
-
-  redirectConfirmation = route => {
+  redirectConfirmation = (route, routeProps = {}) => {
     this.props.resetSubmits();
-    this.props.history.push(route);
+
+    const redirectData = {
+      pathname: route,
+      ...routeProps
+    };
+
+    this.props.history.push(redirectData);
   };
 
-  getConfirmationModal = () => {
+  getConfirmationDialog = () => {
     const { cid } = this.props.match.params;
+
+    const handleClose = () => {
+      this.redirectConfirmation("/clientes/editar/" + cid);
+    };
+
     return (
-      <Modal
-        aria-labelledby="simple-modal-title"
-        aria-describedby="simple-modal-description"
+      <Dialog
         open={true}
+        TransitionComponent={SlideTransition}
+        keepMounted
+        onClose={handleClose}
+        aria-labelledby="dialogUpdateClient"
+        aria-describedby="dialogUpdateClientDescription"
       >
-        <div style={this.getModalStyle()} className={this.props.classes.paper}>
-          <Typography variant="h6" id="modal-title" color="secondary">
+        <DialogTitle id="dialogUpdateClient" color="secondary">
+          <Typography variant="inherit" color="secondary">
             Cliente Atualizado
           </Typography>
-          <Typography variant="subtitle1" id="simple-modal-description">
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="dialogUpdateClientDescription">
             Todos os dados do cliente foram atualizados no sistema.
-          </Typography>
-          <Grid
-            container
-            justify="space-between"
-            style={{ paddingTop: "10px" }}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Voltar
+          </Button>
+          <Button
+            onClick={() => this.redirectConfirmation("/clientes/listar")}
+            color="primary"
+            variant="contained"
           >
-            <Button
-              onClick={() =>
-                this.redirectConfirmation("/clientes/editar/" + cid)
-              }
-              variant="contained"
-              id="voltar"
-            >
-              Voltar
-            </Button>
-            <Button
-              onClick={() => this.redirectConfirmation("/clientes/listar")}
-              variant="contained"
-              color="primary"
-              id="listar"
-            >
-              Listar clientes
-            </Button>
-          </Grid>
-        </div>
-      </Modal>
+            Listar clientes
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+  getDeleteConfirmationDialog = () => {
+    const { cid } = this.props.match.params;
+
+    const handleClose = () => {
+      this.setState({
+        deleteConfirmationOpen: false
+      });
+    };
+
+    const handleDelete = () => {
+      this.props.deleteClient(cid);
+    };
+
+    return (
+      <Dialog
+        open={true}
+        TransitionComponent={SlideTransition}
+        keepMounted
+        onClose={handleClose}
+        aria-labelledby="dialogUpdateClient"
+        aria-describedby="dialogUpdateClientDescription"
+      >
+        <DialogTitle id="dialogUpdateClient" color="secondary">
+          <Typography variant="inherit" color="secondary">
+            Tem certeza?
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="dialogUpdateClientDescription">
+            Todos os dados do cliente serão removidos do sistema.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleDelete} color="primary" variant="contained">
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
     );
   };
 
@@ -705,12 +770,18 @@ class EditarCliente extends Component {
   // END Tabs Compoenents
 
   render() {
-    const { createClientValidation, clientUpdated, isRequesting } = this.props;
-    const { value } = this.state;
+    const {
+      classes,
+      clientUpdated,
+      createClientValidation,
+      isRequesting
+    } = this.props;
+    const { tabIndex, deleteConfirmationOpen } = this.state;
+    const formValidado = validaDados.cadastro(this.state);
     const isSendingData = this.props.isSendingData
       ? this.props.isSendingData
       : false;
-    const formValidado = validaDados.cadastro(this.state);
+    const showLoadProgress = isSendingData || isRequesting ? true : false;
 
     return (
       <React.Fragment>
@@ -718,9 +789,10 @@ class EditarCliente extends Component {
           title="Informações do cliente"
           backRoute="/clientes/listar"
         />
-        {isSendingData || isRequesting ? this.getLoadingProgress() : null}
+        {showLoadProgress && this.getLoadingProgress()}
 
-        {clientUpdated ? this.getConfirmationModal() : null}
+        {clientUpdated && this.getConfirmationDialog()}
+        {deleteConfirmationOpen && this.getDeleteConfirmationDialog()}
 
         {!isRequesting && (
           <Grid className="wrap-content">
@@ -731,7 +803,7 @@ class EditarCliente extends Component {
               <Zoom in={true}>
                 <AppBar position="static" color="default" elevation={2}>
                   <Tabs
-                    value={value}
+                    value={tabIndex}
                     onChange={this.handleTabs}
                     scrollable
                     scrollButtons="on"
@@ -745,14 +817,16 @@ class EditarCliente extends Component {
                   </Tabs>
                 </AppBar>
               </Zoom>
-              {value === 0 && <TabContainer>{this.getMainForm()}</TabContainer>}
-              {value === 1 && (
+              {tabIndex === 0 && (
+                <TabContainer>{this.getMainForm()}</TabContainer>
+              )}
+              {tabIndex === 1 && (
                 <TabContainer>{this.getSecondaryForm()}</TabContainer>
               )}
-              {value === 2 && (
+              {tabIndex === 2 && (
                 <TabContainer>{this.getIndicationForm()}</TabContainer>
               )}
-              {value === 3 && (
+              {tabIndex === 3 && (
                 <TabContainer>{this.getAddressForm()}</TabContainer>
               )}
             </div>
@@ -762,9 +836,17 @@ class EditarCliente extends Component {
             <Grid container justify="flex-end">
               <MuiThemeProvider theme={buttonTheme}>
                 <Fab
+                  color="secondary"
+                  onClick={this.openDeleteDialog}
+                  className={classes.ctrlButtonMR}
+                >
+                  <DeleteIcon />
+                </Fab>
+                <Fab
                   color="primary"
                   disabled={!formValidado}
                   onClick={this.handleSubmit}
+                  className={classes.ctrlButtonMR}
                 >
                   <CheckIcon />
                 </Fab>
@@ -788,14 +870,17 @@ const mapStateToProps = (state, ownProps) => {
   const isRequesting = requests.clients === undefined ? true : requests.clients;
   const clients = state.firestore.data.clients;
   const clientInformation = clients ? clients[cid] : null;
-  const isSendingData = state.client.isSendingData;
-  if (state.client.isSendingData) {
-    console.log("maping");
-  }
+  const {
+    isSendingData,
+    clientUpdated,
+    clientDeleted,
+    createClientValidation
+  } = state.client;
 
   const defaultData = {
-    createClientValidation: state.client.createClientValidation,
-    clientUpdated: state.client.clientUpdated,
+    createClientValidation,
+    clientUpdated,
+    clientDeleted,
     isSendingData,
     clientInformation,
     isRequesting
@@ -809,6 +894,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => {
   return {
     updateClient: client => dispatch(updateClient(client)),
+    deleteClient: cid => dispatch(deleteClient(cid)),
     resetSubmits: () => dispatch(resetSubmits())
   };
 };

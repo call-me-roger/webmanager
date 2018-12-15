@@ -47,9 +47,9 @@ import PageHeader from "../@includes/templates/PageHeader";
 import SlideTransition from "../@includes/templates/SlideTransition";
 import CustomizedSnackbar from "../@includes/templates/Snackbar";
 import {
-  deleteClients,
-  resetClientsList
-} from "../../../store/actions/clientActions";
+  deleteProducts,
+  resetProductsList
+} from "../../../store/actions/productActions";
 
 function desc(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -85,13 +85,18 @@ const rows = [
     label: "Cadastro"
   },
   {
-    id: "clientName",
+    id: "producttName",
     numeric: false,
     disablePadding: true,
     label: "Nome"
   },
-  { id: "clientEmail", numeric: true, disablePadding: false, label: "Email" },
-  { id: "clientPhone", numeric: true, disablePadding: false, label: "Celular" },
+  { id: "productPrice", numeric: true, disablePadding: false, label: "Preço" },
+  {
+    id: "productDepartment",
+    numeric: true,
+    disablePadding: false,
+    label: "Departamento"
+  },
   { id: "edit", numeric: false, disablePadding: false, label: "Editar" }
 ];
 
@@ -199,7 +204,7 @@ let EnhancedTableToolbar = props => {
           </Typography>
         ) : (
           <Typography variant="h6" id="tableTitle">
-            Todos os clientes
+            Todos os produtos
           </Typography>
         )}
       </div>
@@ -230,33 +235,33 @@ EnhancedTableToolbar.propTypes = {
 
 EnhancedTableToolbar = withStyles(toolbarStyles)(EnhancedTableToolbar);
 
-class ListarClientes extends React.Component {
+class ListarProdutos extends React.Component {
   state = {
     order: "desc",
     orderBy: "registrationDate",
     selected: [],
-    clients: [],
+    products: [],
     page: 0,
     rowsPerPage: 5,
     deleteConfirmationOpen: null
   };
 
   componentDidMount() {
-    const { clients } = this.props;
-    if (clients) this.setClientsData(clients);
+    const { products } = this.props;
+    if (products) this.setProductssData(products);
   }
 
   componentDidUpdate() {
-    const { clientsListError } = this.props;
-    if (clientsListError) {
+    const { productsListError } = this.props;
+    if (productsListError) {
       window.location.reload();
     }
   }
 
-  componentWillReceiveProps({ clients, clientsDeleted, clientsListError }) {
-    if (clients) this.setClientsData(clients);
+  componentWillReceiveProps({ products, productsDeleted, productsListError }) {
+    if (products) this.setProductssData(products);
 
-    if (clientsDeleted || clientsListError) {
+    if (productsDeleted || productsListError) {
       this.setState({
         deleteConfirmationOpen: false,
         selected: []
@@ -265,7 +270,7 @@ class ListarClientes extends React.Component {
   }
 
   redirectConfirmation = (route, routeProps = {}) => {
-    this.props.resetClientsList();
+    this.props.resetProductsList();
 
     const redirectData = {
       pathname: route,
@@ -289,7 +294,7 @@ class ListarClientes extends React.Component {
 
   handleSelectAllClick = event => {
     if (event.target.checked) {
-      this.setState(state => ({ selected: state.clients.map(n => n.id) }));
+      this.setState(state => ({ selected: state.products.map(n => n.id) }));
       return;
     }
     this.setState({ selected: [] });
@@ -335,8 +340,8 @@ class ListarClientes extends React.Component {
     let selectedDocuments = [];
     if (selected && selected.length > 0) {
       selected.map(index => {
-        if (this.state.clients[index]) {
-          selectedDocuments.push(this.state.clients[index].cid);
+        if (this.state.products[index]) {
+          selectedDocuments.push(this.state.products[index].pid);
         }
         return true;
       });
@@ -346,7 +351,7 @@ class ListarClientes extends React.Component {
     };
 
     const handleDelete = () => {
-      this.props.deleteClients(selectedDocuments);
+      this.props.deleteProducts(selectedDocuments);
     };
 
     return (
@@ -355,20 +360,20 @@ class ListarClientes extends React.Component {
         TransitionComponent={SlideTransition}
         keepMounted
         onClose={handleClose}
-        aria-labelledby="dialogUpdateClient"
-        aria-describedby="dialogUpdateClientDescription"
+        aria-labelledby="dialogUpdate"
+        aria-describedby="dialogUpdateDescription"
       >
-        <DialogTitle id="dialogUpdateClient" color="secondary">
+        <DialogTitle id="dialogUpdate" color="secondary">
           <Typography variant="inherit" color="secondary">
             Tem certeza?
           </Typography>
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="dialogUpdateClientDescription">
+          <DialogContentText id="dialogUpdateDescription">
             Todos os dados{" "}
             {selected.length === 1
-              ? "do cliente selecionado"
-              : `dos ${selected.length} clientes selecionados`}
+              ? "do produto selecionado"
+              : `dos ${selected.length} produtos selecionados`}
             {" serão removidos do sistema"}.
           </DialogContentText>
         </DialogContent>
@@ -387,25 +392,25 @@ class ListarClientes extends React.Component {
   isSelected = id => this.state.selected.indexOf(id) !== -1;
   // END Table Functions
 
-  setClientsData = clients => {
-    let clientsData = [];
-    if (clients) {
-      Object.keys(clients).map(index => {
-        if (clients[index]) {
-          const clientID = clients[index].id;
-          const { nome, email, celular, createdAt } = clients[index];
-          clientsData.push({
+  setProductssData = products => {
+    let productsData = [];
+    if (products) {
+      Object.keys(products).map(index => {
+        if (products[index]) {
+          const productID = products[index].id;
+          const { produto, preco, departamento, createdAt } = products[index];
+          productsData.push({
             id: index,
-            cid: clientID,
-            clientName: nome,
-            clientEmail: email,
-            clientPhone: celular,
+            pid: productID,
+            producttName: produto,
+            productPrice: preco,
+            productDepartment: departamento,
             registrationDate: createdAt
           });
         }
         return true;
       });
-      this.setState({ clients: clientsData });
+      this.setState({ products: productsData });
     }
   };
 
@@ -417,7 +422,7 @@ class ListarClientes extends React.Component {
     const { classes, isRequesting, isSendingData } = this.props;
     const { snackbar } = this.props.location;
     const {
-      clients,
+      products,
       order,
       orderBy,
       selected,
@@ -426,12 +431,12 @@ class ListarClientes extends React.Component {
       deleteConfirmationOpen
     } = this.state;
     const emptyRows =
-      rowsPerPage - Math.min(rowsPerPage, clients.length - page * rowsPerPage);
+      rowsPerPage - Math.min(rowsPerPage, products.length - page * rowsPerPage);
     const showLoadProgress = isRequesting || isSendingData ? true : false;
 
     return (
       <React.Fragment>
-        <PageHeader title="Listar clientes" backRoute="/clientes" />
+        <PageHeader title="Listar produtos" backRoute="/loja" />
         {showLoadProgress ? this.getLoadingProgress() : null}
         {deleteConfirmationOpen && this.getDeleteConfirmationDialog()}
 
@@ -462,10 +467,10 @@ class ListarClientes extends React.Component {
                       orderBy={orderBy}
                       onSelectAllClick={this.handleSelectAllClick}
                       onRequestSort={this.handleRequestSort}
-                      rowCount={clients.length}
+                      rowCount={products.length}
                     />
                     <TableBody>
-                      {stableSort(clients, getSorting(order, orderBy))
+                      {stableSort(products, getSorting(order, orderBy))
                         .slice(
                           page * rowsPerPage,
                           page * rowsPerPage + rowsPerPage
@@ -497,12 +502,14 @@ class ListarClientes extends React.Component {
                                 scope="row"
                                 padding="none"
                               >
-                                {n.clientName}
+                                {n.producttName}
                               </TableCell>
-                              <TableCell numeric>{n.clientEmail}</TableCell>
-                              <TableCell numeric>{n.clientPhone}</TableCell>
+                              <TableCell numeric>{n.productPrice}</TableCell>
+                              <TableCell numeric>
+                                {n.productDepartment}
+                              </TableCell>
                               <TableCell>
-                                <Link to={`/clientes/editar/${n.cid}`}>
+                                <Link to={`/produtos/editar/${n.pid}`}>
                                   <EditIcon color="secondary" />
                                 </Link>
                               </TableCell>
@@ -511,10 +518,10 @@ class ListarClientes extends React.Component {
                         })}
                       {emptyRows > 0 && (
                         <TableRow style={{ height: 49 * emptyRows }}>
-                          {clients.length === 0 && !isRequesting ? (
+                          {products.length === 0 && !isRequesting ? (
                             <TableCell colSpan={6}>
                               <Typography align="center">
-                                Nenhum cliente encontrado
+                                Nenhum produto encontrado
                               </Typography>
                             </TableCell>
                           ) : null}
@@ -527,16 +534,16 @@ class ListarClientes extends React.Component {
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 25]}
                   component="div"
-                  count={clients.length}
+                  count={products.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
                   backIconButtonProps={{ "aria-label": "Página anterior" }}
                   nextIconButtonProps={{ "aria-label": "Próxima página" }}
                   onChangePage={this.handleChangePage}
                   onChangeRowsPerPage={this.handleChangeRowsPerPage}
-                  labelRowsPerPage="Clientes por página"
+                  labelRowsPerPage="Produtos por página"
                   labelDisplayedRows={({ from, to, count }) =>
-                    `Clientes: ${from}-${to} de ${count}`
+                    `Produtos: ${from}-${to} de ${count}`
                   }
                 />
               </Paper>
@@ -548,28 +555,29 @@ class ListarClientes extends React.Component {
   }
 }
 
-ListarClientes.propTypes = {
+ListarProdutos.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => {
   const requests = state.firestore.status.requesting;
-  const isRequesting = requests.clients === undefined ? true : requests.clients;
-  const { isSendingData, clientsDeleted, clientsListError } = state.client;
-  const clients = state.firestore.ordered.clients;
+  const isRequesting =
+    requests.products === undefined ? true : requests.products;
+  const { isSendingData, productsDeleted, productsListError } = state.product;
+  const products = state.firestore.ordered.products;
   return {
-    clients,
+    products,
     isRequesting,
     isSendingData,
-    clientsDeleted,
-    clientsListError
+    productsDeleted,
+    productsListError
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    deleteClients: clients => dispatch(deleteClients(clients)),
-    resetClientsList: () => dispatch(resetClientsList())
+    deleteProducts: products => dispatch(deleteProducts(products)),
+    resetProductsList: () => dispatch(resetProductsList())
   };
 };
 
@@ -579,5 +587,5 @@ export default compose(
     mapStateToProps,
     mapDispatchToProps
   ),
-  firestoreConnect([{ collection: "clients", orderBy: ["createdAt", "desc"] }])
-)(ListarClientes);
+  firestoreConnect([{ collection: "products", orderBy: ["createdAt", "desc"] }])
+)(ListarProdutos);

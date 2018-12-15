@@ -35,18 +35,21 @@ import FavoriteIcon from "@material-ui/icons/Favorite";
 import PersonPinIcon from "@material-ui/icons/PersonPin";
 import PlaceIcon from "@material-ui/icons/Place";
 import CheckIcon from "@material-ui/icons/Check";
+import DeleteIcon from "@material-ui/icons/Delete";
 // Custom Pallet
 import { MuiThemeProvider } from "@material-ui/core/styles";
 // Includes
 import * as validator from "../@functions/validator";
-import * as validaDados from "./validaDados";
+import * as validaDados from "./validaDadosProduto";
 import PageHeader from "../@includes/templates/PageHeader";
 import SlideTransition from "../@includes/templates/SlideTransition";
 // Database
 import { compose } from "redux";
 import { connect } from "react-redux";
+import { firestoreConnect } from "react-redux-firebase";
 import {
-  createClient,
+  updateClient,
+  deleteClient,
   resetSubmits
 } from "../../../store/actions/clientActions";
 
@@ -131,7 +134,7 @@ function CEPMask(props) {
 // END Form Masks
 
 // Main Component
-class CadastrarCliente extends Component {
+class EditarProduto extends Component {
   state = {
     nome: "",
     email: "",
@@ -153,8 +156,39 @@ class CadastrarCliente extends Component {
     complemento: "",
     cepError: false,
     sendingData: false,
-    value: 0 // Tabs
+    deleteConfirmationOpen: false,
+    tabIndex: 0, // Tabs,
+    redirectData: null
   };
+
+  constructor(props) {
+    super(props);
+    const { clientData } = props;
+    if (clientData) {
+      this.state = {
+        ...this.state,
+        ...clientData
+      };
+    }
+  }
+
+  componentWillReceiveProps({ clientData, clientDeleted }) {
+    if (clientData) this.setState({ ...clientData });
+
+    const redirectData = {
+      pathname: "/clientes/listar",
+      routeProps: {
+        snackbar: { message: "Cliente excluido", variant: "success" }
+      }
+    };
+    if (clientDeleted) this.setState({ redirectData });
+  }
+
+  componentDidUpdate() {
+    const { redirectData } = this.state;
+    if (redirectData)
+      this.redirectConfirmation(redirectData.pathname, redirectData.routeProps);
+  }
 
   // Form Handles
   handleChange = e => {
@@ -190,9 +224,16 @@ class CadastrarCliente extends Component {
   handleSubmit = event => {
     event.preventDefault();
 
+    const { cid } = this.props.match.params;
     if (!this.props.isSendingData) {
-      this.props.createClient(this.state);
+      this.props.updateClient({ ...this.state, cid: cid });
     }
+  };
+
+  openDeleteDialog = () => {
+    this.setState({
+      deleteConfirmationOpen: true
+    });
   };
   // END Form Handles
 
@@ -215,8 +256,8 @@ class CadastrarCliente extends Component {
   // END Form Errors
 
   // Handle Functions
-  handleTabs = (event, value) => {
-    this.setState({ value });
+  handleTabs = (event, tabIndex) => {
+    this.setState({ tabIndex });
   };
 
   handleBuscaCEP = () => {
@@ -273,18 +314,22 @@ class CadastrarCliente extends Component {
     );
   };
 
-  redirectConfirmation = route => {
+  redirectConfirmation = (route, routeProps = {}) => {
     this.props.resetSubmits();
-    this.props.history.push(route);
+
+    const redirectData = {
+      pathname: route,
+      ...routeProps
+    };
+
+    this.props.history.push(redirectData);
   };
 
   getConfirmationDialog = () => {
-    const handleConfirm = () => {
-      this.redirectConfirmation("/clientes/listar");
-    };
+    const { cid } = this.props.match.params;
 
     const handleClose = () => {
-      this.redirectConfirmation("/clientes");
+      this.redirectConfirmation("/clientes/editar/" + cid);
     };
 
     return (
@@ -298,26 +343,74 @@ class CadastrarCliente extends Component {
       >
         <DialogTitle id="dialogUpdateClient" color="secondary">
           <Typography variant="inherit" color="secondary">
-            Cliente Adicionado
+            Cliente Atualizado
           </Typography>
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="dialogUpdateClientDescription">
-            Agora você pode editar e configurar a conta do cliente conforme
-            necessário.
+            Todos os dados do cliente foram atualizados no sistema.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">
             Voltar
           </Button>
-          <Button onClick={handleConfirm} color="primary" variant="contained">
+          <Button
+            onClick={() => this.redirectConfirmation("/clientes/listar")}
+            color="primary"
+            variant="contained"
+          >
             Listar clientes
           </Button>
         </DialogActions>
       </Dialog>
     );
   };
+
+  getDeleteConfirmationDialog = () => {
+    const { cid } = this.props.match.params;
+
+    const handleClose = () => {
+      this.setState({
+        deleteConfirmationOpen: false
+      });
+    };
+
+    const handleDelete = () => {
+      this.props.deleteClient(cid);
+    };
+
+    return (
+      <Dialog
+        open={true}
+        TransitionComponent={SlideTransition}
+        keepMounted
+        onClose={handleClose}
+        aria-labelledby="dialogUpdateClient"
+        aria-describedby="dialogUpdateClientDescription"
+      >
+        <DialogTitle id="dialogUpdateClient" color="secondary">
+          <Typography variant="inherit" color="secondary">
+            Tem certeza?
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="dialogUpdateClientDescription">
+            Todos os dados do cliente serão removidos do sistema.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleDelete} color="primary" variant="contained">
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
   // END Handle Functions
 
   // Tabs Components
@@ -677,80 +770,131 @@ class CadastrarCliente extends Component {
   // END Tabs Compoenents
 
   render() {
-    const { createClientValidation, clientCreated } = this.props;
-    const { value } = this.state;
+    const {
+      classes,
+      clientUpdated,
+      createClientValidation,
+      isRequesting
+    } = this.props;
+    const { tabIndex, deleteConfirmationOpen } = this.state;
+    const formValidado = validaDados.cadastro(this.state);
     const isSendingData = this.props.isSendingData
       ? this.props.isSendingData
       : false;
-    const formValidado = validaDados.cadastro(this.state);
+    const showLoadProgress = isSendingData || isRequesting ? true : false;
 
     return (
       <React.Fragment>
-        <PageHeader title="Cadastrar cliente" backRoute="/clientes" />
-        {isSendingData ? this.getLoadingProgress() : null}
+        <PageHeader
+          title="Informações do produto"
+          backRoute="/produtos/listar"
+        />
+        {showLoadProgress && this.getLoadingProgress()}
 
-        {clientCreated ? this.getConfirmationDialog() : null}
+        {clientUpdated && this.getConfirmationDialog()}
+        {deleteConfirmationOpen && this.getDeleteConfirmationDialog()}
 
-        <div
-          style={{ marginTop: "20px", marginBottom: "30px" }}
-          className="paper-form"
-        >
-          <Zoom in={true}>
-            <AppBar position="static" color="default" elevation={2}>
-              <Tabs
-                value={value}
-                onChange={this.handleTabs}
-                scrollable
-                scrollButtons="on"
-                indicatorColor="secondary"
-                textColor="secondary"
-              >
-                <Tab label="Essencial" icon={<PhoneIcon />} />
-                <Tab label="Perfil" icon={<PersonPinIcon />} />
-                <Tab label="Indicação" icon={<FavoriteIcon />} />
-                <Tab label="Endereço" icon={<PlaceIcon />} />
-              </Tabs>
-            </AppBar>
-          </Zoom>
-          {value === 0 && <TabContainer>{this.getMainForm()}</TabContainer>}
-          {value === 1 && (
-            <TabContainer>{this.getSecondaryForm()}</TabContainer>
-          )}
-          {value === 2 && (
-            <TabContainer>{this.getIndicationForm()}</TabContainer>
-          )}
-          {value === 3 && <TabContainer>{this.getAddressForm()}</TabContainer>}
-        </div>
-        {createClientValidation
-          ? this.displayErrorMessage(createClientValidation)
-          : null}
-        <Grid container justify="flex-end">
-          <MuiThemeProvider theme={buttonTheme}>
-            <Fab
-              color="primary"
-              disabled={!formValidado}
-              onClick={this.handleSubmit}
+        {!isRequesting && (
+          <Grid className="wrap-content">
+            <div
+              style={{ marginTop: "20px", marginBottom: "30px" }}
+              className="paper-form"
             >
-              <CheckIcon />
-            </Fab>
-          </MuiThemeProvider>
-        </Grid>
+              <Zoom in={true}>
+                <AppBar position="static" color="default" elevation={2}>
+                  <Tabs
+                    value={tabIndex}
+                    onChange={this.handleTabs}
+                    scrollable
+                    scrollButtons="on"
+                    indicatorColor="secondary"
+                    textColor="secondary"
+                  >
+                    <Tab label="Essencial" icon={<PhoneIcon />} />
+                    <Tab label="Perfil" icon={<PersonPinIcon />} />
+                    <Tab label="Indicação" icon={<FavoriteIcon />} />
+                    <Tab label="Endereço" icon={<PlaceIcon />} />
+                  </Tabs>
+                </AppBar>
+              </Zoom>
+              {tabIndex === 0 && (
+                <TabContainer>{this.getMainForm()}</TabContainer>
+              )}
+              {tabIndex === 1 && (
+                <TabContainer>{this.getSecondaryForm()}</TabContainer>
+              )}
+              {tabIndex === 2 && (
+                <TabContainer>{this.getIndicationForm()}</TabContainer>
+              )}
+              {tabIndex === 3 && (
+                <TabContainer>{this.getAddressForm()}</TabContainer>
+              )}
+            </div>
+            {createClientValidation
+              ? this.displayErrorMessage(createClientValidation)
+              : null}
+            <Grid container justify="flex-end">
+              <MuiThemeProvider theme={buttonTheme}>
+                <Fab
+                  color="secondary"
+                  onClick={this.openDeleteDialog}
+                  className={classes.ctrlButtonMR}
+                >
+                  <DeleteIcon />
+                </Fab>
+                <Fab
+                  color="primary"
+                  disabled={!formValidado}
+                  onClick={this.handleSubmit}
+                  className={classes.ctrlButtonMR}
+                >
+                  <CheckIcon />
+                </Fab>
+              </MuiThemeProvider>
+            </Grid>
+          </Grid>
+        )}
+        {isRequesting && (
+          <Typography align="center" style={{ paddingTop: "15px" }}>
+            Carregando...
+          </Typography>
+        )}
       </React.Fragment>
     );
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    createClientValidation: state.client.createClientValidation,
-    isSendingData: state.client.isSendingData,
-    clientCreated: state.client.clientCreated
+const mapStateToProps = (state, ownProps) => {
+  const { cid } = ownProps.match.params;
+  const requests = state.firestore.status.requesting;
+  const isRequesting = requests.clients === undefined ? true : requests.clients;
+  const clients = state.firestore.data.clients;
+  const clientInformation = clients ? clients[cid] : null;
+  const {
+    isSendingData,
+    clientUpdated,
+    clientDeleted,
+    createClientValidation
+  } = state.client;
+
+  const defaultData = {
+    createClientValidation,
+    clientUpdated,
+    clientDeleted,
+    isSendingData,
+    clientInformation,
+    isRequesting
   };
+
+  const clientData = !isSendingData ? clientInformation : null;
+
+  return { ...defaultData, clientData };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    createClient: client => dispatch(createClient(client)),
+    updateClient: client => dispatch(updateClient(client)),
+    deleteClient: cid => dispatch(deleteClient(cid)),
     resetSubmits: () => dispatch(resetSubmits())
   };
 };
@@ -760,5 +904,6 @@ export default compose(
   connect(
     mapStateToProps,
     mapDispatchToProps
-  )
-)(CadastrarCliente);
+  ),
+  firestoreConnect([{ collection: "clients" }])
+)(EditarProduto);

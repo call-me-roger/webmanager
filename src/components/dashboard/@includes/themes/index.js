@@ -9,7 +9,13 @@ export const buttonTheme = createMuiTheme({
     primary: {
       light: green[300],
       main: green[500],
-      dark: green[800],
+      dark: green[700],
+      contrastText: "#fff"
+    },
+    secondary: {
+      light: "#ff5252",
+      main: "#f77575",
+      dark: "#ec4141",
       contrastText: "#fff"
     }
   }
@@ -34,6 +40,14 @@ export const generalStyles = theme => ({
     marginTop: "0",
     marginBottom: "0"
   },
+  fwTextArea: {
+    width: "calc(100% - 32px)",
+    margin: "16px",
+    paddingTop: "0",
+    paddingBottom: "0",
+    marginTop: "-16px",
+    marginBottom: "0"
+  },
   container: {
     paddingTop: 0,
     paddingBottom: 0
@@ -44,5 +58,8 @@ export const generalStyles = theme => ({
     backgroundColor: theme.palette.background.paper,
     boxShadow: theme.shadows[5],
     padding: theme.spacing.unit * 4
+  },
+  ctrlButtonMR: {
+    marginLeft: "15px"
   }
 });
