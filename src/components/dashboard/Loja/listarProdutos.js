@@ -21,7 +21,8 @@ import {
   Paper,
   Checkbox,
   LinearProgress,
-  Button
+  Button,
+  Grid
 } from "@material-ui/core";
 import {
   Dialog,
@@ -34,6 +35,7 @@ import IconButton from "@material-ui/core/IconButton";
 import Tooltip from "@material-ui/core/Tooltip";
 // Material Icons
 import EditIcon from "@material-ui/icons/Edit";
+import AddIcon from "@material-ui/icons/Add";
 import DeleteIcon from "@material-ui/icons/Delete";
 import FilterListIcon from "@material-ui/icons/FilterList";
 import { lighten } from "@material-ui/core/styles/colorManipulator";
@@ -452,7 +454,7 @@ class ListarProdutos extends React.Component {
           <React.Fragment>
             <div
               className={classes.tableContainer}
-              style={{ marginTop: "20px", marginBottom: "30px" }}
+              style={{ marginTop: "20px", marginBottom: "120px" }}
             >
               <Paper className={classes.root}>
                 <EnhancedTableToolbar
@@ -550,6 +552,13 @@ class ListarProdutos extends React.Component {
             </div>
           </React.Fragment>
         </Grow>
+        <Grid container justify="flex-end">
+          <Link to="/produtos/cadastrar">
+            <Button variant="outlined" color="secondary">
+              <AddIcon color="inherit" /> NOVO PRODUTO
+            </Button>
+          </Link>
+        </Grid>
       </React.Fragment>
     );
   }

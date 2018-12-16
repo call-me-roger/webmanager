@@ -47,7 +47,13 @@ class NavgationLinks extends Component {
           </ListItem>
         </Link>
         <Link to="/loja">
-          <ListItem button selected={currentRoute.includes("/loja")}>
+          <ListItem
+            button
+            selected={
+              currentRoute.includes("/loja") ||
+              currentRoute.includes("/produtos")
+            }
+          >
             <ListItemIcon>
               <StoreIcon />
             </ListItemIcon>

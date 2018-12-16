@@ -21,7 +21,7 @@ const productReducer = (state = initSate, action) => {
         productUpdated: true
       };
     case "DELETE_PRODUCT":
-      console.log("produto excluido:", action.cid);
+      console.log("produto excluido:", action.pid);
       return {
         ...state,
         createProductValidation: null,

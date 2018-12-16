@@ -2,6 +2,8 @@ import React, { Component } from "react";
 // General Classes
 import { buttonTheme, generalStyles } from "../@includes/themes";
 import withMultipleStyles from "../@includes/themes/withMultipleStyles";
+// import MaskedInput from "react-text-mask";
+import NumberFormat from "react-number-format";
 // Material Components
 import {
   Typography,
@@ -17,7 +19,6 @@ import {
   Fab,
   Button,
   Zoom,
-  Tooltip,
   LinearProgress
 } from "@material-ui/core";
 import {
@@ -27,19 +28,17 @@ import {
   DialogContentText,
   DialogTitle
 } from "@material-ui/core";
-import MaskedInput from "react-text-mask";
 // Tabs import
 import { AppBar, Tabs, Tab } from "@material-ui/core";
-import PhoneIcon from "@material-ui/icons/Phone";
-import FavoriteIcon from "@material-ui/icons/Favorite";
-import PersonPinIcon from "@material-ui/icons/PersonPin";
-import PlaceIcon from "@material-ui/icons/Place";
+import ListIcon from "@material-ui/icons/List";
+import AssignmentIcon from "@material-ui/icons/Assignment";
+import PlaylistAddIcon from "@material-ui/icons/PlaylistAdd";
+import LocalShippingIcon from "@material-ui/icons/LocalShipping";
 import CheckIcon from "@material-ui/icons/Check";
 import DeleteIcon from "@material-ui/icons/Delete";
 // Custom Pallet
 import { MuiThemeProvider } from "@material-ui/core/styles";
 // Includes
-import * as validator from "../@functions/validator";
 import * as validaDados from "./validaDadosProduto";
 import PageHeader from "../@includes/templates/PageHeader";
 import SlideTransition from "../@includes/templates/SlideTransition";
@@ -48,10 +47,10 @@ import { compose } from "redux";
 import { connect } from "react-redux";
 import { firestoreConnect } from "react-redux-firebase";
 import {
-  updateClient,
-  deleteClient,
+  updateProduct,
+  deleteProduct,
   resetSubmits
-} from "../../../store/actions/clientActions";
+} from "../../../store/actions/productActions";
 
 function TabContainer(props) {
   return (
@@ -64,124 +63,67 @@ function TabContainer(props) {
 }
 
 // Form Masks
-function PhoneMask(props) {
-  const { inputRef, ...other } = props;
-
+const NumberFormatCustom = props => {
+  const { inputRef, onChange, ...other } = props;
   return (
-    <MaskedInput
+    <NumberFormat
       {...other}
-      ref={inputRef}
-      mask={[
-        "(",
-        /[1-9]/,
-        /\d/,
-        ")",
-        " ",
-        /\d/,
-        " ",
-        /\d/,
-        /\d/,
-        /\d/,
-        /\d/,
-        "-",
-        /\d/,
-        /\d/,
-        /\d/,
-        /\d/
-      ]}
+      getInputRef={inputRef}
+      onValueChange={values => {
+        onChange({ target: { value: values.value } });
+      }}
+      prefix="R$"
+      decimalScale={2}
+      fixedDecimalScale
     />
   );
-}
-
-function CPFMask(props) {
-  const { inputRef, ...other } = props;
-
-  return (
-    <MaskedInput
-      {...other}
-      ref={inputRef}
-      mask={[
-        /[0-9]/,
-        /\d/,
-        /\d/,
-        ".",
-        /\d/,
-        /\d/,
-        /\d/,
-        ".",
-        /\d/,
-        /\d/,
-        /\d/,
-        "-",
-        /\d/,
-        /\d/
-      ]}
-    />
-  );
-}
-
-function CEPMask(props) {
-  const { inputRef, ...other } = props;
-
-  return (
-    <MaskedInput
-      {...other}
-      ref={inputRef}
-      mask={[/\d/, /\d/, /\d/, /\d/, /\d/, "-", /\d/, /\d/, /\d/]}
-    />
-  );
-}
+};
 // END Form Masks
 
 // Main Component
-class EditarProduto extends Component {
+class CadastrarProduto extends Component {
   state = {
-    nome: "",
-    email: "",
-    celular: "",
-    cpf: "",
-    profissao: "",
-    dataNascimento: "",
-    sexo: "masculino",
-    indicacao: {
-      value: 0,
-      complemento: ""
-    },
-    cep: "",
-    estado: "",
-    cidade: "",
-    bairro: "",
-    rua: "",
-    numero: "",
-    complemento: "",
-    cepError: false,
+    produto: "",
+    preco: "",
+    departamento: "",
+    descricaoCurta: "",
+    descricaoLonga: "",
+    precoCusto: "",
+    precoPromocao: "",
+    marca: "",
+    estoque: "",
+    imagem: "",
+    peso: "",
+    altura: "",
+    largura: "",
+    comprimento: "",
     sendingData: false,
     deleteConfirmationOpen: false,
-    tabIndex: 0, // Tabs,
-    redirectData: null
+    redirectData: null,
+    tabIndex: 0 // Tabs
   };
 
   constructor(props) {
     super(props);
-    const { clientData } = props;
-    if (clientData) {
+    const { productData } = props;
+    if (productData) {
       this.state = {
         ...this.state,
-        ...clientData
+        ...productData
       };
     }
   }
 
-  componentWillReceiveProps({ clientData, clientDeleted }) {
-    if (clientData) this.setState({ ...clientData });
+  componentWillReceiveProps({ productData, productDeleted }) {
+    if (productData) this.setState({ ...productData });
 
     const redirectData = {
-      pathname: "/clientes/listar",
+      pathname: "/produtos/listar",
       routeProps: {
-        snackbar: { message: "Cliente excluido", variant: "success" }
+        snackbar: { message: "Produto excluido", variant: "success" }
       }
     };
-    if (clientDeleted) this.setState({ redirectData });
+    if (productDeleted) this.setState({ redirectData });
   }
 
   componentDidUpdate() {
@@ -203,30 +145,12 @@ class EditarProduto extends Component {
     });
   };
 
-  handleIndicacaoVal = e => {
-    this.setState({
-      indicacao: {
-        value: e.target.value,
-        complemento: this.state.indicacao.complemento
-      }
-    });
-  };
-
-  handleIndicacaoComp = e => {
-    this.setState({
-      indicacao: {
-        value: this.state.indicacao.value,
-        complemento: e.target.value
-      }
-    });
-  };
-
   handleSubmit = event => {
     event.preventDefault();
 
-    const { cid } = this.props.match.params;
+    const { pid } = this.props.match.params;
     if (!this.props.isSendingData) {
-      this.props.updateClient({ ...this.state, cid: cid });
+      this.props.updateProduct({ ...this.state, pid: pid });
     }
   };
 
@@ -238,63 +162,25 @@ class EditarProduto extends Component {
   // END Form Handles
 
   // Form Errors
-  errName = () => {
+  errProductName = () => {
     const { nome } = this.state;
     return nome && nome.length < 3;
   };
 
-  errEmail = () => {
-    const { email } = this.state;
-    return email && !validator.isEmail(email);
+  errPrice = () => {
+    const { preco } = this.state;
+    return preco && preco.replace(/[^0-9.]+/g, "") <= 0;
   };
 
-  errCelular = () => {
-    const { celular } = this.state;
-    const cleanedCelular = celular.replace(/[^0-9.]+/g, "");
-    return celular && cleanedCelular.length < 10;
+  errDepartment = () => {
+    const { departamento } = this.state;
+    return departamento === "";
   };
   // END Form Errors
 
   // Handle Functions
   handleTabs = (event, tabIndex) => {
     this.setState({ tabIndex });
-  };
-
-  handleBuscaCEP = () => {
-    const cleanedCEP = this.state.cep.replace(/[^0-9.]+/g, "");
-    const searchURL = `https://viacep.com.br/ws/${cleanedCEP}/json/`;
-
-    const resetAddress = (err = false) => {
-      this.setState({
-        estado: "",
-        cidade: "",
-        bairro: "",
-        rua: "",
-        cepError: err
-      });
-    };
-
-    if (cleanedCEP.length === 8) {
-      fetch(searchURL)
-        .then(response => response.json())
-        .then(data => {
-          if (!data.erro) {
-            this.setState({
-              estado: data.uf,
-              cidade: data.localidade,
-              bairro: data.bairro,
-              rua: data.logradouro,
-              cepError: false
-            });
-          } else {
-            resetAddress(true);
-          }
-        });
-    } else if (cleanedCEP.length > 0) {
-      resetAddress(true);
-    } else {
-      resetAddress(false);
-    }
   };
 
   getLoadingProgress = () => {
@@ -314,22 +200,19 @@ class EditarProduto extends Component {
     );
   };
 
-  redirectConfirmation = (route, routeProps = {}) => {
+  redirectConfirmation = route => {
     this.props.resetSubmits();
-
-    const redirectData = {
-      pathname: route,
-      ...routeProps
-    };
-
-    this.props.history.push(redirectData);
+    this.props.history.push(route);
   };
 
   getConfirmationDialog = () => {
-    const { cid } = this.props.match.params;
+    const { pid } = this.props.match.params;
+    const handleConfirm = () => {
+      this.redirectConfirmation("/produtos/listar");
+    };
 
     const handleClose = () => {
-      this.redirectConfirmation("/clientes/editar/" + cid);
+      this.redirectConfirmation(`/produtos/editar/${pid}`);
     };
 
     return (
@@ -338,29 +221,25 @@ class EditarProduto extends Component {
         TransitionComponent={SlideTransition}
         keepMounted
         onClose={handleClose}
-        aria-labelledby="dialogUpdateClient"
-        aria-describedby="dialogUpdateClientDescription"
+        aria-labelledby="dialogUpdate"
+        aria-describedby="dialogUpdateDescription"
       >
-        <DialogTitle id="dialogUpdateClient" color="secondary">
+        <DialogTitle id="dialogUpdate" color="secondary">
           <Typography variant="inherit" color="secondary">
-            Cliente Atualizado
+            Produto Atualizado
           </Typography>
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="dialogUpdateClientDescription">
-            Todos os dados do cliente foram atualizados no sistema.
+          <DialogContentText id="dialogUpdateDescription">
+            Todos os dados do produto foram atualizados no sistema.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">
             Voltar
           </Button>
-          <Button
-            onClick={() => this.redirectConfirmation("/clientes/listar")}
-            color="primary"
-            variant="contained"
-          >
-            Listar clientes
+          <Button onClick={handleConfirm} color="primary" variant="contained">
+            Listar produtos
           </Button>
         </DialogActions>
       </Dialog>
@@ -368,7 +247,7 @@ class EditarProduto extends Component {
   };
 
   getDeleteConfirmationDialog = () => {
-    const { cid } = this.props.match.params;
+    const { pid } = this.props.match.params;
 
     const handleClose = () => {
       this.setState({
@@ -377,7 +256,7 @@ class EditarProduto extends Component {
     };
 
     const handleDelete = () => {
-      this.props.deleteClient(cid);
+      this.props.deleteProduct(pid);
     };
 
     return (
@@ -386,17 +265,17 @@ class EditarProduto extends Component {
         TransitionComponent={SlideTransition}
         keepMounted
         onClose={handleClose}
-        aria-labelledby="dialogUpdateClient"
-        aria-describedby="dialogUpdateClientDescription"
+        aria-labelledby="dialogUpdatE"
+        aria-describedby="dialogUpdatEDescription"
       >
-        <DialogTitle id="dialogUpdateClient" color="secondary">
+        <DialogTitle id="dialogUpdatE" color="secondary">
           <Typography variant="inherit" color="secondary">
             Tem certeza?
           </Typography>
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="dialogUpdateClientDescription">
-            Todos os dados do cliente serão removidos do sistema.
+          <DialogContentText id="dialogUpdatEDescription">
+            Todos os dados do produto serão removidos do sistema.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -410,7 +289,6 @@ class EditarProduto extends Component {
       </Dialog>
     );
   };
-
   // END Handle Functions
 
   // Tabs Components
@@ -421,20 +299,41 @@ class EditarProduto extends Component {
         <Grid item xs={4}>
           <FormControl
             className={classes.fwFormControl}
-            error={this.errName() || false}
-            aria-describedby="nome-error-text"
+            error={this.errProductName() || false}
+            aria-describedby="productErrorText"
             fullWidth
           >
-            <InputLabel htmlFor="nome-error-text">Nome Completo*</InputLabel>
+            <InputLabel htmlFor="productErrorText">Produto*</InputLabel>
             <Input
-              id="nome"
-              value={this.state.nome}
+              id="produto"
+              value={this.state.produto}
               onChange={this.handleChange}
             />
-            <FormHelperText id="nome-error-text">
-              {this.errName()
-                ? "O nome precisa ter no mínimo 3 caracteres"
+            <FormHelperText id="productErrorText">
+              {this.errProductName()
+                ? "O nome do produto precisa ter no mínimo 3 caracteres"
                 : null}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={3}>
+          <FormControl
+            className={classes.fwFormControl}
+            error={this.errPrice() || false}
+            aria-describedby="priceErrorText"
+            fullWidth
+          >
+            <InputLabel htmlFor="priceErrorText">Preço cliente*</InputLabel>
+            <Input
+              id="preco"
+              value={this.state.preco}
+              onChange={e => this.setState({ preco: e.target.value })}
+              type="text"
+              inputComponent={NumberFormatCustom}
+            />
+            <FormHelperText id="priceErrorText">
+              {this.errPrice() ? "O preço precisa ser maior que 0,00" : null}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -442,44 +341,21 @@ class EditarProduto extends Component {
         <Grid item xs={4}>
           <FormControl
             className={classes.fwFormControl}
-            error={this.errEmail() || false}
-            aria-describedby="email-error-text"
+            error={this.errDepartment() || false}
+            aria-describedby="departamentoErrorText"
             fullWidth
           >
-            <InputLabel htmlFor="email-error-text">Email*</InputLabel>
-            <Input
-              id="email"
-              value={this.state.email}
-              onChange={this.handleChange}
-              type="email"
-            />
-            <FormHelperText id="email-error-text">
-              {this.errEmail()
-                ? "O email precisa ser preenchido corretamente"
-                : null}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={4}>
-          <FormControl
-            className={classes.fwFormControl}
-            error={this.errCelular() || false}
-            aria-describedby="celular-error-text"
-            fullWidth
-          >
-            <InputLabel htmlFor="celular-error-text">Celular*</InputLabel>
-            <Input
-              id="celular"
-              value={this.state.celular}
-              onChange={this.handleChange}
-              type="tel"
-              inputComponent={PhoneMask}
-            />
-            <FormHelperText id="celular-error-text">
-              {this.errCelular()
-                ? "O Celular precisa ser preenchido corretamente"
-                : null}
+            <InputLabel htmlFor="selectSexo">Departamento*</InputLabel>
+            <Select
+              value={this.state.departamento}
+              onChange={this.handleSelect}
+              inputProps={{ name: "departamento", id: "selectDepartamento" }}
+            >
+              <MenuItem value="cursos">Cursos</MenuItem>
+              <MenuItem value="servicos">Serviços</MenuItem>
+            </Select>
+            <FormHelperText id="departamentoErrorText">
+              {this.errDepartment() ? "Escolha um departamento" : null}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -489,279 +365,311 @@ class EditarProduto extends Component {
 
   getSecondaryForm = () => {
     const { classes } = this.props;
+    const handleError = field => {
+      switch (field) {
+        case "descricaoCurta":
+          return (
+            (this.state.descricaoCurta &&
+              this.state.descricaoCurta.length < 30) === true
+          );
+        case "descricaoLonga":
+          return (
+            (this.state.descricaoLonga &&
+              this.state.descricaoLonga.length < 60) === true
+          );
+        default:
+          return false;
+      }
+    };
     return (
       <React.Fragment>
-        <Grid item xs={3}>
+        <Grid item xs={5}>
           <FormControl
             className={classes.fwFormControl}
-            error={
-              (this.state.cpf && !validator.isCPF(this.state.cpf)) || false
-            }
-            aria-describedby="cpf-error-text"
             fullWidth
+            aria-describedby="errDescricaoLonga"
+            error={handleError("descricaoCurta")}
           >
-            <InputLabel htmlFor="cpf-error-text">CPF</InputLabel>
-            <Input
-              id="cpf"
-              value={this.state.cpf}
+            <TextField
+              id="descricaoCurta"
+              label="Descrição curta"
+              multiline
+              value={this.state.descricaoCurta}
               onChange={this.handleChange}
-              inputComponent={CPFMask}
             />
-            <FormHelperText id="cpf-error-text">
-              {this.state.cpf && !validator.isCPF(this.state.cpf)
-                ? "Preencha o CPF corretamente"
+            <FormHelperText id="errDescricaoCurta">
+              {handleError("descricaoCurta")
+                ? "A descrição curta deve conter no mínimo 30 caracteres"
                 : null}
             </FormHelperText>
           </FormControl>
         </Grid>
-
-        <Grid item xs={3}>
-          <FormControl className={classes.fwFormControl} fullWidth>
-            <InputLabel htmlFor="profissao-error-text">Profissão</InputLabel>
-            <Input
-              id="profissao"
-              value={this.state.profissao}
-              onChange={this.handleChange}
-            />
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={3}>
-          <FormControl className={classes.fwFormControl} fullWidth>
+        <Grid item xs={7}>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errDescricaoLonga"
+            error={handleError("descricaoLonga")}
+          >
             <TextField
-              id="dataNascimento"
-              label="Data de Nascimento"
-              type="date"
-              InputLabelProps={{ shrink: true }}
+              id="descricaoLonga"
+              label="Descrição longa"
+              multiline
+              value={this.state.descricaoLonga}
               onChange={this.handleChange}
-              value={this.state.dataNascimento}
             />
           </FormControl>
+          <FormHelperText id="errDescricaoLonga">
+            {handleError("descricaoLonga")
+              ? "A descrição longa deve conter no mínimo 60 caracteres"
+              : null}
+          </FormHelperText>
         </Grid>
+      </React.Fragment>
+    );
+  };
 
+  getAdditionalInfoForm = () => {
+    const { classes } = this.props;
+    const handleError = field => {
+      switch (field) {
+        case "precoCusto":
+          return (this.state.precoCusto && this.state.precoCusto < 0) === true;
+        case "precoPromocao":
+          return (
+            (this.state.precoPromocao && this.state.precoPromocao <= 0) === true
+          );
+        case "estoque":
+          return (this.state.estoque && this.state.estoque < 0) === true;
+        default:
+          return false;
+      }
+    };
+    return (
+      <React.Fragment>
         <Grid item xs={3}>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errPrecoCusto"
+            error={handleError("precoCusto")}
+          >
+            <InputLabel>Custo do produto</InputLabel>
+            <Input
+              id="precoCusto"
+              value={this.state.precoCusto}
+              type="text"
+              inputComponent={NumberFormatCustom}
+              onChange={e => this.setState({ precoCusto: e.target.value })}
+            />
+            <FormHelperText id="errPrecoCusto">
+              {handleError("precoCusto")
+                ? "O custo do produto deve ser maior ou igual a R$ 0.00"
+                : null}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid item xs={3}>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errPrecoPromocao"
+            error={handleError("precoPromocao")}
+          >
+            <InputLabel>Preço em promoção</InputLabel>
+            <Input
+              id="precoPromocao"
+              value={this.state.precoPromocao}
+              type="text"
+              inputComponent={NumberFormatCustom}
+              onChange={e => this.setState({ precoPromocao: e.target.value })}
+            />
+            <FormHelperText id="errPrecoPromocao">
+              {handleError("precoPromocao")
+                ? "O custo do produto deve ser maior a R$ 0.00"
+                : null}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid item xs={2}>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errEstoque"
+            error={handleError("estoque")}
+          >
+            <InputLabel>Estoque</InputLabel>
+            <Input
+              id="estoque"
+              value={this.state.estoque}
+              onChange={this.handleChange}
+              type="number"
+            />
+            <FormHelperText id="errEstoque">
+              {handleError("estoque")
+                ? "O estoque do produto deve ser maior ou igual a zero"
+                : null}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid item xs={4}>
           <FormControl className={classes.fwFormControl} fullWidth>
-            <InputLabel htmlFor="selectSexo">Sexo</InputLabel>
+            <InputLabel>Marca</InputLabel>
             <Select
-              value={this.state.sexo}
+              value={this.state.marca}
               onChange={this.handleSelect}
-              inputProps={{ name: "sexo", id: "selectSexo" }}
+              inputProps={{ name: "marca", id: "selectMarca" }}
             >
-              <MenuItem value="masculino">Masculino</MenuItem>
-              <MenuItem value="feminino">Feminino</MenuItem>
+              <MenuItem value="nike">Nike</MenuItem>
+              <MenuItem value="apple">Apple</MenuItem>
             </Select>
           </FormControl>
         </Grid>
-      </React.Fragment>
-    );
-  };
-
-  getIndicationForm = () => {
-    const { classes } = this.props;
-    const selectSite = () => {
-      return (
-        <Grid item xs={4}>
-          <FormControl className={classes.fwFormControl} fullWidth>
-            <InputLabel>Qual site?</InputLabel>
-            <Input
-              id="indicacaoComplemento"
-              value={this.state.indicacao.complemento}
-              onChange={this.handleIndicacaoComp}
-            />
-          </FormControl>
-        </Grid>
-      );
-    };
-    const selectRedeSocial = () => {
-      return (
-        <Grid item xs={4}>
-          <FormControl className={classes.fwFormControl} fullWidth>
-            <InputLabel>Qual rede social?</InputLabel>
-            <Select
-              value={this.state.indicacao.complemento}
-              onChange={this.handleIndicacaoComp}
-              inputProps={{
-                name: "indicacaoComplemento",
-                id: "selectIndicacaoComplemento"
-              }}
-            >
-              <MenuItem value="Facebook">Facebook</MenuItem>
-              <MenuItem value="Instagram">Instagram</MenuItem>
-              <MenuItem value="Youtube">Youtube</MenuItem>
-              <MenuItem value="LinkedIn">LinkedIn</MenuItem>
-              <MenuItem value="Twitter">Twitter</MenuItem>
-              <MenuItem value="WhatsApp">WhatsApp</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-      );
-    };
-
-    return (
-      <React.Fragment>
-        <Grid item xs={4}>
-          <FormControl className={classes.fwFormControl} fullWidth>
-            <InputLabel htmlFor="selectIndicacao">
-              Como o cliente conheceu a loja?
-            </InputLabel>
-            <Select
-              value={this.state.indicacao.value}
-              onChange={this.handleIndicacaoVal}
-              inputProps={{ name: "indicacao", id: "selectIndicacao" }}
-            >
-              <MenuItem value={0}>Indicação</MenuItem>
-              <MenuItem value={1}>Google</MenuItem>
-              <MenuItem value={2}>Redes Sociais</MenuItem>
-              <MenuItem value={3}>Blog ou site</MenuItem>
-              <MenuItem value={4}>Televisão</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        {this.state.indicacao.value === 2 ? selectRedeSocial() : null}
-        {this.state.indicacao.value === 3 ? selectSite() : null}
-      </React.Fragment>
-    );
-  };
-
-  getAddressForm = () => {
-    const { classes } = this.props;
-    const cleanedCEP = this.state.cep.replace(/[^0-9.]+/g, "");
-    return (
-      <React.Fragment>
-        <Grid item xs={2}>
-          <FormControl
-            className={classes.fwFormControl}
-            error={this.state.cepError || false}
-            aria-describedby="cep-error-text"
-            fullWidth
-          >
-            <InputLabel htmlFor="cep-error-text">CEP</InputLabel>
-            <Input
-              id="cep"
-              value={this.state.cep}
-              onChange={this.handleChange}
-              onKeyUp={this.handleBuscaCEP}
-              inputComponent={CEPMask}
-            />
-            <FormHelperText id="cep-error-text">
-              {this.state.cepError ? "Preencha o CEP corretamente" : null}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={2}>
-          <FormControl
-            className={classes.fwFormControl}
-            error={this.state.cepError || false}
-            aria-describedby="estado-error-text"
-            fullWidth
-          >
-            <InputLabel htmlFor="estado-error-text">Estado</InputLabel>
-            <Tooltip
-              title="Preencha o CEP"
-              disableHoverListener={
-                !this.state.cepError && cleanedCEP.length === 8
-              }
-              placement="bottom"
-            >
-              <Input id="estado" value={this.state.estado} readOnly />
-            </Tooltip>
-            <FormHelperText id="estado-error-text">
-              {this.state.cepError ? "CEP incorreto" : null}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={2}>
-          <FormControl
-            className={classes.fwFormControl}
-            error={this.state.cepError || false}
-            aria-describedby="cidade-error-text"
-            fullWidth
-          >
-            <InputLabel htmlFor="cidade-error-text">Cidade</InputLabel>
-            <Tooltip
-              title="Preencha o CEP"
-              disableHoverListener={
-                !this.state.cepError && cleanedCEP.length === 8
-              }
-              placement="bottom"
-            >
-              <Input id="cidade" value={this.state.cidade} readOnly />
-            </Tooltip>
-            <FormHelperText id="cidade-error-text">
-              {this.state.cepError ? "CEP incorreto" : null}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={2}>
-          <FormControl
-            className={classes.fwFormControl}
-            error={this.state.cepError || false}
-            aria-describedby="bairro-error-text"
-            fullWidth
-          >
-            <InputLabel htmlFor="bairro-error-text">Bairro</InputLabel>
-            <Tooltip
-              title="Preencha o CEP"
-              disableHoverListener={
-                !this.state.cepError && cleanedCEP.length === 8
-              }
-              placement="bottom"
-            >
-              <Input id="bairro" value={this.state.bairro} readOnly />
-            </Tooltip>
-            <FormHelperText id="bairro-error-text">
-              {this.state.cepError ? "CEP incorreto" : null}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={4}>
-          <FormControl
-            className={classes.fwFormControl}
-            error={this.state.cepError || false}
-            aria-describedby="rua-error-text"
-            fullWidth
-          >
-            <InputLabel htmlFor="rua-error-text">Rua</InputLabel>
-            <Tooltip
-              title="Preencha o CEP"
-              disableHoverListener={
-                !this.state.cepError && cleanedCEP.length === 8
-              }
-              placement="bottom"
-            >
-              <Input id="rua" value={this.state.rua} readOnly />
-            </Tooltip>
-            <FormHelperText id="rua-error-text">
-              {this.state.cepError ? "CEP incorreto" : null}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={2}>
-          <FormControl className={classes.fwFormControl} fullWidth>
-            <InputLabel htmlFor="numero-error-text">Número</InputLabel>
-            <Input
-              id="numero"
-              value={this.state.numero}
-              onChange={this.handleChange}
-            />
-          </FormControl>
-        </Grid>
-
         <Grid item xs={3}>
           <FormControl className={classes.fwFormControl} fullWidth>
-            <InputLabel htmlFor="complemento-error-text">
-              Complemento
-            </InputLabel>
-            <Input
-              id="complemento"
-              value={this.state.complemento}
+            <Typography
+              variant="subtitle2"
+              style={{ paddingTop: "5px" }}
+              color="primary"
+            >
+              Imagem
+            </Typography>
+            <input
+              accept="image/*"
+              className={classes.input}
+              style={{ display: "none" }}
+              id="imagem"
+              type="file"
               onChange={this.handleChange}
             />
+            <label htmlFor="imagem">
+              <Button
+                variant="contained"
+                component="span"
+                className={classes.button}
+                fullWidth
+              >
+                Selecionar imagem
+              </Button>
+              <Typography variant="subtitle2" style={{ paddingTop: "5px" }}>
+                {this.state.imagem
+                  ? this.state.imagem.replace(/^C:\\fakepath\\/i, "")
+                  : null}
+              </Typography>
+            </label>
+          </FormControl>
+        </Grid>
+      </React.Fragment>
+    );
+  };
+
+  getShippingForm = () => {
+    const { classes } = this.props;
+    const { largura, altura, comprimento, peso } = this.state;
+    const handleError = field => {
+      switch (field) {
+        case "peso":
+          return (this.state.peso && this.state.peso <= 0) === true;
+        case "largura":
+          return (this.state.largura && this.state.largura <= 0) === true;
+        case "altura":
+          return (this.state.altura && this.state.altura <= 0) === true;
+        case "comprimento":
+          return (
+            (this.state.comprimento && this.state.comprimento <= 0) === true
+          );
+        default:
+          return false;
+      }
+    };
+    return (
+      <React.Fragment>
+        <Grid item xs={2}>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errPeso"
+            error={handleError("precoPromocao")}
+          >
+            <InputLabel>Peso</InputLabel>
+            <Input
+              id="peso"
+              value={peso}
+              onChange={this.handleChange}
+              type="number"
+              placeholder="Kg"
+            />
+            <FormHelperText id="errPeso">
+              {handleError("peso")
+                ? "O peso do produto deve ser maior que zero"
+                : null}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid item xs={2}>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errLargura"
+            error={handleError("precoPromocao")}
+          >
+            <InputLabel>Largura</InputLabel>
+            <Input
+              id="largura"
+              value={largura}
+              onChange={this.handleChange}
+              type="number"
+              placeholder="cm"
+            />
+            <FormHelperText id="errLargura">
+              {handleError("largura")
+                ? "A largura do produto deve ser maior que zero"
+                : null}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid item xs={2}>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errAltura"
+            error={handleError("precoPromocao")}
+          >
+            <InputLabel>Altura</InputLabel>
+            <Input
+              id="altura"
+              value={altura}
+              onChange={this.handleChange}
+              type="number"
+              placeholder="cm"
+            />
+            <FormHelperText id="errAltura">
+              {handleError("altura")
+                ? "A altura do produto deve ser maior que zero"
+                : null}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid item xs={2}>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errComprimento"
+            error={handleError("precoPromocao")}
+          >
+            <InputLabel>Comprimento</InputLabel>
+            <Input
+              id="comprimento"
+              value={comprimento}
+              onChange={this.handleChange}
+              type="number"
+              placeholder="cm"
+            />
+            <FormHelperText id="errComprimento">
+              {handleError("comprimento")
+                ? "O comprimento do produto deve ser maior que zero"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
       </React.Fragment>
@@ -772,27 +680,22 @@ class EditarProduto extends Component {
   render() {
     const {
       classes,
-      clientUpdated,
-      createClientValidation,
-      isRequesting
+      createProductValidation,
+      productUpdated,
+      isRequesting,
+      isSendingData
     } = this.props;
     const { tabIndex, deleteConfirmationOpen } = this.state;
     const formValidado = validaDados.cadastro(this.state);
-    const isSendingData = this.props.isSendingData
-      ? this.props.isSendingData
-      : false;
     const showLoadProgress = isSendingData || isRequesting ? true : false;
 
     return (
       <React.Fragment>
-        <PageHeader
-          title="Informações do produto"
-          backRoute="/produtos/listar"
-        />
-        {showLoadProgress && this.getLoadingProgress()}
+        <PageHeader title="Informações do produto" backRoute="/loja" />
+        {showLoadProgress ? this.getLoadingProgress() : null}
 
-        {clientUpdated && this.getConfirmationDialog()}
-        {deleteConfirmationOpen && this.getDeleteConfirmationDialog()}
+        {productUpdated ? this.getConfirmationDialog() : null}
+        {deleteConfirmationOpen ? this.getDeleteConfirmationDialog() : null}
 
         {!isRequesting && (
           <Grid className="wrap-content">
@@ -810,10 +713,10 @@ class EditarProduto extends Component {
                     indicatorColor="secondary"
                     textColor="secondary"
                   >
-                    <Tab label="Essencial" icon={<PhoneIcon />} />
-                    <Tab label="Perfil" icon={<PersonPinIcon />} />
-                    <Tab label="Indicação" icon={<FavoriteIcon />} />
-                    <Tab label="Endereço" icon={<PlaceIcon />} />
+                    <Tab label="Essencial" icon={<ListIcon />} />
+                    <Tab label="Descrições" icon={<AssignmentIcon />} />
+                    <Tab label="Adicionais" icon={<PlaylistAddIcon />} />
+                    <Tab label="Frete" icon={<LocalShippingIcon />} />
                   </Tabs>
                 </AppBar>
               </Zoom>
@@ -824,14 +727,14 @@ class EditarProduto extends Component {
                 <TabContainer>{this.getSecondaryForm()}</TabContainer>
               )}
               {tabIndex === 2 && (
-                <TabContainer>{this.getIndicationForm()}</TabContainer>
+                <TabContainer>{this.getAdditionalInfoForm()}</TabContainer>
               )}
               {tabIndex === 3 && (
-                <TabContainer>{this.getAddressForm()}</TabContainer>
+                <TabContainer>{this.getShippingForm()}</TabContainer>
               )}
             </div>
-            {createClientValidation
-              ? this.displayErrorMessage(createClientValidation)
+            {createProductValidation
+              ? this.displayErrorMessage(createProductValidation)
               : null}
             <Grid container justify="flex-end">
               <MuiThemeProvider theme={buttonTheme}>
@@ -865,36 +768,37 @@ class EditarProduto extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const { cid } = ownProps.match.params;
+  const { pid } = ownProps.match.params;
   const requests = state.firestore.status.requesting;
-  const isRequesting = requests.clients === undefined ? true : requests.clients;
-  const clients = state.firestore.data.clients;
-  const clientInformation = clients ? clients[cid] : null;
+  const isRequesting =
+    requests.products === undefined ? true : requests.products;
+  const products = state.firestore.data.products;
+  const productInformation = products ? products[pid] : null;
   const {
     isSendingData,
-    clientUpdated,
-    clientDeleted,
+    productUpdated,
+    productDeleted,
     createClientValidation
-  } = state.client;
+  } = state.product;
 
   const defaultData = {
     createClientValidation,
-    clientUpdated,
-    clientDeleted,
+    productUpdated,
+    productDeleted,
     isSendingData,
-    clientInformation,
+    productInformation,
     isRequesting
   };
 
-  const clientData = !isSendingData ? clientInformation : null;
+  const productData = !isSendingData ? productInformation : null;
 
-  return { ...defaultData, clientData };
+  return { ...defaultData, productData };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    updateClient: client => dispatch(updateClient(client)),
-    deleteClient: cid => dispatch(deleteClient(cid)),
+    updateProduct: client => dispatch(updateProduct(client)),
+    deleteProduct: pid => dispatch(deleteProduct(pid)),
     resetSubmits: () => dispatch(resetSubmits())
   };
 };
@@ -905,5 +809,5 @@ export default compose(
     mapStateToProps,
     mapDispatchToProps
   ),
-  firestoreConnect([{ collection: "clients" }])
-)(EditarProduto);
+  firestoreConnect([{ collection: "products" }])
+)(CadastrarProduto);

@@ -12,7 +12,7 @@ export const createProduct = productData => {
       preco: productData.preco,
       departamento: productData.departamento,
       descricaoCurta: productData.descricaoCurta,
-      descricaoLonga: productData.departamento,
+      descricaoLonga: productData.descricaoLonga,
       precoCusto: productData.precoCusto,
       precoPromocao: productData.precoPromocao,
       marca: productData.marca,
@@ -70,12 +70,13 @@ export const updateProduct = productData => {
     // async calls to database
 
     const product = {
+      pid: productData.pid,
       produto: productData.produto,
       slug: productData.produto.replace(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
       preco: productData.preco,
       departamento: productData.departamento,
       descricaoCurta: productData.descricaoCurta,
-      descricaoLonga: productData.departamento,
+      descricaoLonga: productData.descricaoLonga,
       precoCusto: productData.precoCusto,
       precoPromocao: productData.precoPromocao,
       marca: productData.marca,
@@ -139,6 +140,7 @@ export const updateProduct = productData => {
 export const deleteProduct = pid => {
   return (dispatch, getState, { getFirebase }) => {
     const firebase = getFirebase();
+    console.log(pid);
 
     dispatch({ type: "SENDING_DATA" });
 
@@ -186,7 +188,7 @@ export const deleteProducts = productsOBJ => {
       batch
         .commit()
         .then(() => {
-          dispatch({ type: "DELETE_PRODUCTS", product: productsOBJ });
+          dispatch({ type: "DELETE_PRODUCTS", products: productsOBJ });
         })
         .catch(err => {
           dispatch({

@@ -21,7 +21,8 @@ import {
   Paper,
   Checkbox,
   LinearProgress,
-  Button
+  Button,
+  Grid
 } from "@material-ui/core";
 import {
   Dialog,
@@ -33,6 +34,7 @@ import {
 import IconButton from "@material-ui/core/IconButton";
 import Tooltip from "@material-ui/core/Tooltip";
 // Material Icons
+import AddIcon from "@material-ui/icons/Add";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 import FilterListIcon from "@material-ui/icons/FilterList";
@@ -447,7 +449,7 @@ class ListarClientes extends React.Component {
           <React.Fragment>
             <div
               className={classes.tableContainer}
-              style={{ marginTop: "20px", marginBottom: "30px" }}
+              style={{ marginTop: "20px", marginBottom: "120px" }}
             >
               <Paper className={classes.root}>
                 <EnhancedTableToolbar
@@ -543,6 +545,13 @@ class ListarClientes extends React.Component {
             </div>
           </React.Fragment>
         </Grow>
+        <Grid container justify="flex-end">
+          <Link to="/clientes/cadastrar">
+            <Button variant="outlined" color="secondary">
+              <AddIcon color="inherit" /> NOVO CLIENTE
+            </Button>
+          </Link>
+        </Grid>
       </React.Fragment>
     );
   }

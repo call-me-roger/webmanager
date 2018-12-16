@@ -13,7 +13,12 @@ const PageHeader = ({ title, backRoute, classes }) => {
         <React.Fragment>
           <Grid container justify="space-between">
             <Grid item>
-              <Typography variant="h4" gutterBottom component="h2">
+              <Typography
+                variant="h4"
+                gutterBottom
+                component="h2"
+                color="secondary"
+              >
                 {title}
               </Typography>
             </Grid>

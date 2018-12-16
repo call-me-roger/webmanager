@@ -142,43 +142,6 @@ class CadastrarProduto extends Component {
     this.setState({ value });
   };
 
-  handleBuscaCEP = () => {
-    const cleanedCEP = this.state.cep.replace(/[^0-9.]+/g, "");
-    const searchURL = `https://viacep.com.br/ws/${cleanedCEP}/json/`;
-
-    const resetAddress = (err = false) => {
-      this.setState({
-        estado: "",
-        cidade: "",
-        bairro: "",
-        rua: "",
-        cepError: err
-      });
-    };
-
-    if (cleanedCEP.length === 8) {
-      fetch(searchURL)
-        .then(response => response.json())
-        .then(data => {
-          if (!data.erro) {
-            this.setState({
-              estado: data.uf,
-              cidade: data.localidade,
-              bairro: data.bairro,
-              rua: data.logradouro,
-              cepError: false
-            });
-          } else {
-            resetAddress(true);
-          }
-        });
-    } else if (cleanedCEP.length > 0) {
-      resetAddress(true);
-    } else {
-      resetAddress(false);
-    }
-  };
-
   getLoadingProgress = () => {
     return <LinearProgress color="secondary" />;
   };
@@ -317,31 +280,65 @@ class CadastrarProduto extends Component {
 
   getSecondaryForm = () => {
     const { classes } = this.props;
+    const handleError = field => {
+      switch (field) {
+        case "descricaoCurta":
+          return (
+            (this.state.descricaoCurta &&
+              this.state.descricaoCurta.length < 30) === true
+          );
+        case "descricaoLonga":
+          return (
+            (this.state.descricaoLonga &&
+              this.state.descricaoLonga.length < 60) === true
+          );
+        default:
+          return false;
+      }
+    };
     return (
       <React.Fragment>
         <Grid item xs={5}>
-          <FormControl className={classes.fwTextArea} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errDescricaoLonga"
+            error={handleError("descricaoCurta")}
+          >
             <TextField
               id="descricaoCurta"
               label="Descrição curta"
               multiline
               value={this.state.descricaoCurta}
               onChange={this.handleChange}
-              margin="normal"
             />
+            <FormHelperText id="errDescricaoCurta">
+              {handleError("descricaoCurta")
+                ? "A descrição curta deve conter no mínimo 30 caracteres"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
         <Grid item xs={7}>
-          <FormControl className={classes.fwTextArea} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errDescricaoLonga"
+            error={handleError("descricaoLonga")}
+          >
             <TextField
               id="descricaoLonga"
               label="Descrição longa"
               multiline
               value={this.state.descricaoLonga}
               onChange={this.handleChange}
-              margin="normal"
             />
           </FormControl>
+          <FormHelperText id="errDescricaoLonga">
+            {handleError("descricaoLonga")
+              ? "A descrição longa deve conter no mínimo 60 caracteres"
+              : null}
+          </FormHelperText>
         </Grid>
       </React.Fragment>
     );
@@ -349,35 +346,73 @@ class CadastrarProduto extends Component {
 
   getAdditionalInfoForm = () => {
     const { classes } = this.props;
-
+    const handleError = field => {
+      switch (field) {
+        case "precoCusto":
+          return (this.state.precoCusto && this.state.precoCusto < 0) === true;
+        case "precoPromocao":
+          return (
+            (this.state.precoPromocao && this.state.precoPromocao <= 0) === true
+          );
+        case "estoque":
+          return (this.state.estoque && this.state.estoque < 0) === true;
+        default:
+          return false;
+      }
+    };
     return (
       <React.Fragment>
         <Grid item xs={3}>
-          <FormControl className={classes.fwFormControl} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errPrecoCusto"
+            error={handleError("precoCusto")}
+          >
             <InputLabel>Custo do produto</InputLabel>
             <Input
               id="precoCusto"
               value={this.state.precoCusto}
-              onChange={this.handleChange}
               type="text"
               inputComponent={NumberFormatCustom}
+              onChange={e => this.setState({ precoCusto: e.target.value })}
             />
+            <FormHelperText id="errPrecoCusto">
+              {handleError("precoCusto")
+                ? "O custo do produto deve ser maior ou igual a R$ 0.00"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
         <Grid item xs={3}>
-          <FormControl className={classes.fwFormControl} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errPrecoPromocao"
+            error={handleError("precoPromocao")}
+          >
             <InputLabel>Preço em promoção</InputLabel>
             <Input
               id="precoPromocao"
               value={this.state.precoPromocao}
-              onChange={this.handleChange}
               type="text"
               inputComponent={NumberFormatCustom}
+              onChange={e => this.setState({ precoPromocao: e.target.value })}
             />
+            <FormHelperText id="errPrecoPromocao">
+              {handleError("precoPromocao")
+                ? "O custo do produto deve ser maior a R$ 0.00"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
         <Grid item xs={2}>
-          <FormControl className={classes.fwFormControl} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errEstoque"
+            error={handleError("estoque")}
+          >
             <InputLabel>Estoque</InputLabel>
             <Input
               id="estoque"
@@ -385,6 +420,11 @@ class CadastrarProduto extends Component {
               onChange={this.handleChange}
               type="number"
             />
+            <FormHelperText id="errEstoque">
+              {handleError("estoque")
+                ? "O estoque do produto deve ser maior ou igual a zero"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
         <Grid item xs={4}>
@@ -441,50 +481,110 @@ class CadastrarProduto extends Component {
   getShippingForm = () => {
     const { classes } = this.props;
     const { largura, altura, comprimento, peso } = this.state;
+    const handleError = field => {
+      switch (field) {
+        case "peso":
+          return (this.state.peso && this.state.peso <= 0) === true;
+        case "largura":
+          return (this.state.largura && this.state.largura <= 0) === true;
+        case "altura":
+          return (this.state.altura && this.state.altura <= 0) === true;
+        case "comprimento":
+          return (
+            (this.state.comprimento && this.state.comprimento <= 0) === true
+          );
+        default:
+          return false;
+      }
+    };
     return (
       <React.Fragment>
         <Grid item xs={2}>
-          <FormControl className={classes.fwFormControl} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errPeso"
+            error={handleError("precoPromocao")}
+          >
             <InputLabel>Peso</InputLabel>
             <Input
               id="peso"
               value={peso}
               onChange={this.handleChange}
               type="number"
+              placeholder="Kg"
             />
+            <FormHelperText id="errPeso">
+              {handleError("peso")
+                ? "O peso do produto deve ser maior que zero"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
         <Grid item xs={2}>
-          <FormControl className={classes.fwFormControl} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errLargura"
+            error={handleError("precoPromocao")}
+          >
             <InputLabel>Largura</InputLabel>
             <Input
               id="largura"
               value={largura}
               onChange={this.handleChange}
               type="number"
+              placeholder="cm"
             />
+            <FormHelperText id="errLargura">
+              {handleError("largura")
+                ? "A largura do produto deve ser maior que zero"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
         <Grid item xs={2}>
-          <FormControl className={classes.fwFormControl} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errAltura"
+            error={handleError("precoPromocao")}
+          >
             <InputLabel>Altura</InputLabel>
             <Input
               id="altura"
               value={altura}
               onChange={this.handleChange}
               type="number"
+              placeholder="cm"
             />
+            <FormHelperText id="errAltura">
+              {handleError("altura")
+                ? "A altura do produto deve ser maior que zero"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
         <Grid item xs={2}>
-          <FormControl className={classes.fwFormControl} fullWidth>
+          <FormControl
+            className={classes.fwFormControl}
+            fullWidth
+            aria-describedby="errComprimento"
+            error={handleError("precoPromocao")}
+          >
             <InputLabel>Comprimento</InputLabel>
             <Input
               id="comprimento"
               value={comprimento}
               onChange={this.handleChange}
               type="number"
+              placeholder="cm"
             />
+            <FormHelperText id="errComprimento">
+              {handleError("comprimento")
+                ? "O comprimento do produto deve ser maior que zero"
+                : null}
+            </FormHelperText>
           </FormControl>
         </Grid>
       </React.Fragment>
