@@ -35,7 +35,7 @@ class Loja extends Component {
                   </Typography>
                 </CardContent>
                 <CardActions style={{ paddingBottom: "15px" }}>
-                  <Link to="/produtos/cadastrar">
+                  <Link to="loja/produtos/cadastrar">
                     <Button size="medium" color="secondary" variant="contained">
                       Cadastrar
                     </Button>
@@ -56,9 +56,51 @@ class Loja extends Component {
                   </Typography>
                 </CardContent>
                 <CardActions style={{ paddingBottom: "15px" }}>
-                  <Link to="/produtos/listar">
+                  <Link to="loja/produtos/listar">
                     <Button size="medium" color="secondary" variant="contained">
                       Listar produtos
+                    </Button>
+                  </Link>
+                </CardActions>
+              </Card>
+            </Grid>
+          </Grow>
+          <Grow in={true}>
+            <Grid item sm={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" component="h2">
+                    Gerenciar Departamentos
+                  </Typography>
+                  <Typography component="p">
+                    Cadastre e edite os departamentos da loja
+                  </Typography>
+                </CardContent>
+                <CardActions style={{ paddingBottom: "15px" }}>
+                  <Link to="loja/departamentos/listar">
+                    <Button size="medium" color="secondary" variant="contained">
+                      Departamentos
+                    </Button>
+                  </Link>
+                </CardActions>
+              </Card>
+            </Grid>
+          </Grow>
+          <Grow in={true}>
+            <Grid item sm={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" component="h2">
+                    Gerenciar Marcas
+                  </Typography>
+                  <Typography component="p">
+                    Cadastre e edite as marcas da loja
+                  </Typography>
+                </CardContent>
+                <CardActions style={{ paddingBottom: "15px" }}>
+                  <Link to="loja/marcas/listar">
+                    <Button size="medium" color="secondary" variant="contained">
+                      Marcas
                     </Button>
                   </Link>
                 </CardActions>

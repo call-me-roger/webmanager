@@ -12,9 +12,11 @@ import ListarClientes from "./components/dashboard/Clientes/listar";
 import EditarCliente from "./components/dashboard/Clientes/editar";
 // Loja
 import Loja from "./components/dashboard/Loja";
-import CadastrarProduto from "./components/dashboard/Loja/cadastrarProduto";
-import ListarProdutos from "./components/dashboard/Loja/listarProdutos";
-import EditarProduto from "./components/dashboard/Loja/editarProduto";
+import CadastrarProduto from "./components/dashboard/Loja/produtos/cadastrarProduto";
+import ListarProdutos from "./components/dashboard/Loja/produtos/listarProdutos";
+import EditarProduto from "./components/dashboard/Loja/produtos/editarProduto";
+import ListarDepartamentos from "./components/dashboard/Loja/departamentos/listarDepartamentos";
+import ListarMarcas from "./components/dashboard/Loja/marcas/listarMarcas";
 import Relatorios from "./components/dashboard/Relatorios";
 import Integracoes from "./components/dashboard/Integracoes";
 
@@ -59,17 +61,25 @@ class App extends Component {
           />
           <Route
             exact
-            path="/produtos/cadastrar"
+            path="/loja/produtos/cadastrar"
             render={() => <Dashboard Component={CadastrarProduto} />}
           />
           <Route
             exact
-            path="/produtos/listar"
+            path="/loja/produtos/listar"
             render={() => <Dashboard Component={ListarProdutos} />}
           />
           <Route
-            path="/produtos/editar/:pid"
+            path="/loja/produtos/editar/:pid"
             render={() => <Dashboard Component={EditarProduto} />}
+          />
+          <Route
+            path="/loja/departamentos/listar"
+            render={() => <Dashboard Component={ListarDepartamentos} />}
+          />
+          <Route
+            path="/loja/marcas/listar"
+            render={() => <Dashboard Component={ListarMarcas} />}
           />
 
           <Route

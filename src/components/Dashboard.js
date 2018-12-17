@@ -171,6 +171,11 @@ const theme = createMuiTheme({
           }
         }
       }
+    },
+    MuiDialogContentText: {
+      root: {
+        paddingBottom: "15px"
+      }
     }
   }
 });

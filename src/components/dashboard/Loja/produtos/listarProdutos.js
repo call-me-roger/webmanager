@@ -1,8 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 // General Classes
-import { generalStyles } from "../@includes/themes";
-import withMultipleStyles from "../@includes/themes/withMultipleStyles";
+import { generalStyles } from "../../@includes/themes";
+import withMultipleStyles from "../../@includes/themes/withMultipleStyles";
 import classNames from "classnames";
 import PropTypes from "prop-types";
 import { withStyles } from "@material-ui/core/styles";
@@ -45,13 +45,13 @@ import { firestoreConnect } from "react-redux-firebase";
 import { compose } from "redux";
 // Complements
 import moment from "moment";
-import PageHeader from "../@includes/templates/PageHeader";
-import SlideTransition from "../@includes/templates/SlideTransition";
-import CustomizedSnackbar from "../@includes/templates/Snackbar";
+import PageHeader from "../../@includes/templates/PageHeader";
+import SlideTransition from "../../@includes/templates/SlideTransition";
+import CustomizedSnackbar from "../../@includes/templates/Snackbar";
 import {
   deleteProducts,
   resetProductsList
-} from "../../../store/actions/productActions";
+} from "../../../../store/actions/productActions";
 
 function desc(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -511,7 +511,7 @@ class ListarProdutos extends React.Component {
                                 {n.productDepartment}
                               </TableCell>
                               <TableCell>
-                                <Link to={`/produtos/editar/${n.pid}`}>
+                                <Link to={`loja/produtos/editar/${n.pid}`}>
                                   <EditIcon color="secondary" />
                                 </Link>
                               </TableCell>
@@ -553,7 +553,7 @@ class ListarProdutos extends React.Component {
           </React.Fragment>
         </Grow>
         <Grid container justify="flex-end">
-          <Link to="/produtos/cadastrar">
+          <Link to="/loja/produtos/cadastrar">
             <Button variant="outlined" color="secondary">
               <AddIcon color="inherit" /> NOVO PRODUTO
             </Button>

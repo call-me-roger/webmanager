@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Slide, Grid, Typography, Button } from "@material-ui/core";
 import ArrowBackIosIcon from "@material-ui/icons/ArrowBackIos";
 
-const PageHeader = ({ title, backRoute, classes }) => {
+const PageHeader = ({ title, description, backRoute, classes }) => {
   return (
     <React.Fragment>
       <div className={classes.appBarSpacer} />
@@ -21,6 +21,15 @@ const PageHeader = ({ title, backRoute, classes }) => {
               >
                 {title}
               </Typography>
+              {description && (
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  style={{ paddingBottom: "20px" }}
+                >
+                  {description}
+                </Typography>
+              )}
             </Grid>
             {backRoute && (
               <Grid item>

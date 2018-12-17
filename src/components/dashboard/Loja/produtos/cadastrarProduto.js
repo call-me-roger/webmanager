@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 // General Classes
-import { buttonTheme, generalStyles } from "../@includes/themes";
-import withMultipleStyles from "../@includes/themes/withMultipleStyles";
+import { buttonTheme, generalStyles } from "../../@includes/themes";
+import withMultipleStyles from "../../@includes/themes/withMultipleStyles";
 // import MaskedInput from "react-text-mask";
 import NumberFormat from "react-number-format";
 // Material Components
@@ -39,15 +39,15 @@ import CheckIcon from "@material-ui/icons/Check";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 // Includes
 import * as validaDados from "./validaDadosProduto";
-import PageHeader from "../@includes/templates/PageHeader";
-import SlideTransition from "../@includes/templates/SlideTransition";
+import PageHeader from "../../@includes/templates/PageHeader";
+import SlideTransition from "../../@includes/templates/SlideTransition";
 // Database
 import { compose } from "redux";
 import { connect } from "react-redux";
 import {
   createProduct,
   resetSubmits
-} from "../../../store/actions/productActions";
+} from "../../../../store/actions/productActions";
 
 function TabContainer(props) {
   return (

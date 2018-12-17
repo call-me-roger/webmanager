@@ -61,5 +61,8 @@ export const generalStyles = theme => ({
   },
   ctrlButtonMR: {
     marginLeft: "15px"
+  },
+  ctrlButtonML: {
+    marginRight: "15px"
   }
 });
